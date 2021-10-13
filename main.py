@@ -1,15 +1,10 @@
-# recordsong.py - record a song on Spotify with the help of Quicktime Player or Piezo
-
 '''
 DOCUMENTATION
 https://spotipy.readthedocs.io/en/2.19.0/
 https://github.com/skybjohnson/spotipy_examples/blob/master/playlist_tracks_and_genre.py
+https://stackoverflow.com/questions/53761033/pydub-play-audio-from-variable
 
 '''
-
-# Example usage:
-#
-# python3 recordsong.py spotify:track:21cp8L9Pei4AgysZVihjSv
 
 import subprocess, sys, os, time, shutil, eyed3
 from urllib.request import urlopen
@@ -18,8 +13,10 @@ import wave
 from recorder import Recorder
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
+import colorama
+from pydub import AudioSegment
 
-verbose = True
+verbose = False
 
 
 def convert_to_uri(s):
@@ -37,16 +34,21 @@ def convert_to_uri(s):
 
 
 class Ripper:
-    recorder = "internal"
-    tmp_storage_location = '/Users/ste/Downloads/Ripper/tmp/'
-    rip_storage_location = '/Users/ste/Downloads/Ripper/'
-    tmp_m4a_file_name = "tmp.m4a"
-    tmp_mp3_file_name = "tmp.mp3"
-    tmp_wav_file_name = "tmp.wav"
-    recfile = None
+    def __init__(self,
+                 ripped_folder_structure='flat',
+                 rip_storage_location=os.path.expanduser('~') + '/Downloads/Ripped/'):
+        self.ripped_folder_structure = ripped_folder_structure
+        self.rip_storage_location = rip_storage_location
+        self.recorder = "internal"
+        self.tmp_storage_location = 'tmp/'
+        self.tmp_m4a_file_name = "tmp.m4a"
+        self.tmp_mp3_file_name = "tmp.mp3"
+        self.tmp_wav_file_name = "tmp.wav"
+        self.recfile = None
 
-    def __init__(self):
-        pass
+        # Create directory for the ripped tracks
+        if not os.path.exists(self.rip_storage_location):
+            os.makedirs(self.rip_storage_location)
 
     def rip(self, track):
 
@@ -59,7 +61,7 @@ class Ripper:
                          stdout=subprocess.PIPE).stdout.read()
         time.sleep(.300)
 
-        # Tell QT or Piezo to record
+        # Start recorder
         if self.recorder == "PIEZO":
             subprocess.Popen(
                 'osascript -e "activate application \\"Piezo\\"" -e "tell application \\"System Events\\"" -e "keystroke \\"r\\" using {command down}" -e "end tell"',
@@ -98,7 +100,7 @@ class Ripper:
             stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
         artworkData = urlopen(artwork).read()
 
-        print("{}, {}".format(artist, track))
+        print(colorama.Back.GREEN, "{}, {}".format(artist, track).encode('utf-8').decode('utf-8'), colorama.Style.RESET_ALL)
 
         # Check every 500 milliseconds if Spotify has stopped playing
         while subprocess.Popen('osascript -e "tell application \\"Spotify\\"" -e "player state" -e "end tell"',
@@ -106,7 +108,7 @@ class Ripper:
                                stdout=subprocess.PIPE).stdout.read() == b"playing\n":
             time.sleep(.500)
 
-        # Spotify has stopped playing, stop the recording in QT or Piezo
+        # Spotify has stopped playing, stop recording
         if self.recorder == "PIEZO":
             subprocess.Popen(
                 'osascript -e "activate application \\"Piezo\\"" -e "tell application \\"System Events\\"" -e "keystroke \\"r\\" using {command down}" -e "end tell"',
@@ -142,45 +144,72 @@ class Ripper:
             if verbose:
                 print("Recording stopped.")
 
+            # Remove noise and convert
+            sound = AudioSegment.from_file(self.tmp_storage_location + self.tmp_wav_file_name, format="wav")
+            # start_trim = detect_leading_silence(sound)
+            # end_trim = detect_leading_silence(sound.reverse())
+            start_trim = 200
+            trimmed_sound = sound[start_trim:]
+            output = AudioSegment.empty()
+            output = trimmed_sound
+            output.apply_gain(12.041199826559245)
+            output.export(self.tmp_storage_location + self.tmp_mp3_file_name, format="mp3")
+
+            '''
             if verbose:
                 print("Converting to mp3...")
             try:
-                subprocess.call(
-                    ['ffmpeg', '-i', f'{self.tmp_storage_location + self.tmp_wav_file_name}',
-                     f'{self.tmp_storage_location + self.tmp_mp3_file_name}'])
+                subprocess.call(['ffmpeg',
+                                 '-loglevel',
+                                 'quiet',
+                                 '-channel_layout',
+                                 'stereo',
+                                 '-i', f'{self.tmp_storage_location + self.tmp_wav_file_name}',
+                                 '-af',
+                                 'volume=4.0',
+                                 f'{self.tmp_storage_location + self.tmp_mp3_file_name}'])
             except Exception as e:
-                print('Error While Converting Audio: {}'.format(e))
+                print('Error during conversion: {}'.format(e))
             else:
                 if verbose:
                     print("Converted.")
-
+            '''
         time.sleep(.500)
-        # '-loglevel', 'quiet'
-
-        # Create directory for the artist
-        if not os.path.exists(self.rip_storage_location + artist):
-            os.makedirs(self.rip_storage_location + artist)
-
-        # Create directory for the album
-        if not os.path.exists(self.rip_storage_location + artist + "/" + album):
-            os.makedirs(self.rip_storage_location + artist + "/" + album)
-
-        # Move MP3 file to the folder containing rips.
-        for f in os.listdir(self.tmp_storage_location):
-            if f.endswith(".mp3"):
-                shutil.move(self.tmp_storage_location + f,
-                            self.rip_storage_location + artist + "/" + album + "/" + track + ".mp3")
 
         # Set and/or update ID3 information
-        musicFile = eyed3.load(self.rip_storage_location + artist + "/" + album + "/" + track + ".mp3")
+        musicFile = eyed3.load(self.tmp_storage_location + self.tmp_mp3_file_name)
         musicFile.tag.images.set(3, artworkData, "image/jpeg", track)
         musicFile.tag.artist = artist
         musicFile.tag.album = album
         musicFile.tag.title = track
         musicFile.tag.save()
 
+        # Move to final location
+        if self.ripped_folder_structure == "flat":
+            for f in os.listdir(self.tmp_storage_location):
+                if f.endswith(".mp3"):
+                    shutil.move(self.tmp_storage_location + f,
+                                self.rip_storage_location + artist + ", " + album + ", " + track + ".mp3")
+
+        elif self.ripped_folder_structure == "tree":
+            # Create directory for the artist
+            if not os.path.exists(self.rip_storage_location + artist):
+                os.makedirs(self.rip_storage_location + artist)
+
+            # Create directory for the album
+            if not os.path.exists(self.rip_storage_location + artist + "/" + album):
+                os.makedirs(self.rip_storage_location + artist + "/" + album)
+
+            # Move MP3 file to the folder containing rips.
+            for f in os.listdir(self.tmp_storage_location):
+                if f.endswith(".mp3"):
+                    shutil.move(self.tmp_storage_location + f,
+                                self.rip_storage_location + artist + "/" + album + "/" + track + ".mp3")
+
 
 def main():
+    colorama.init()
+
     # Understand what the command line input is
 
     # A track URI or URL?
