@@ -1,0 +1,230 @@
+# recordsong.py - record a song on Spotify with the help of Quicktime Player or Piezo
+
+'''
+DOCUMENTATION
+https://spotipy.readthedocs.io/en/2.19.0/
+https://github.com/skybjohnson/spotipy_examples/blob/master/playlist_tracks_and_genre.py
+
+'''
+
+# Example usage:
+#
+# python3 recordsong.py spotify:track:21cp8L9Pei4AgysZVihjSv
+
+import subprocess, sys, os, time, shutil, eyed3
+from urllib.request import urlopen
+import pyaudio
+import wave
+from recorder import Recorder
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
+
+verbose = True
+
+
+def convert_to_uri(s):
+    # It's already an URI
+    if s[:14] == "spotify:track:" or s[:17] == "spotify:playlist:":
+        return (s)
+    # It's a track URL and must be converted into a track URI
+    elif s[:31] == "https://open.spotify.com/track/":
+        return "spotify:track:" + s[31:53]
+    # It's a playlist URL and must be converted into a playlist URI
+    elif s[:34] == "https://open.spotify.com/playlist/":
+        return "spotify:playlist:" + s[34:56]
+    else:
+        return -1
+
+
+class Ripper:
+    recorder = "internal"
+    tmp_storage_location = '/Users/ste/Downloads/Ripper/tmp/'
+    rip_storage_location = '/Users/ste/Downloads/Ripper/'
+    tmp_m4a_file_name = "tmp.m4a"
+    tmp_mp3_file_name = "tmp.mp3"
+    tmp_wav_file_name = "tmp.wav"
+    recfile = None
+
+    def __init__(self):
+        pass
+
+    def rip(self, track):
+
+        # Clear all previous recordings if they exist
+        for f in os.listdir(self.tmp_storage_location):
+            os.remove(os.path.join(self.tmp_storage_location, f))
+
+        # Tell Spotify to pause
+        subprocess.Popen('osascript -e "tell application \\"Spotify\\" to pause"', shell=True,
+                         stdout=subprocess.PIPE).stdout.read()
+        time.sleep(.300)
+
+        # Tell QT or Piezo to record
+        if self.recorder == "PIEZO":
+            subprocess.Popen(
+                'osascript -e "activate application \\"Piezo\\"" -e "tell application \\"System Events\\"" -e "keystroke \\"r\\" using {command down}" -e "end tell"',
+                shell=True, stdout=subprocess.PIPE).stdout.read()
+
+        elif self.recorder == "QT":
+            subprocess.Popen(
+                'osascript -e "tell application \\"QuickTime Player\\" to activate" -e "tell application \\"QuickTime Player\\" to start (new audio recording)"',
+                shell=True, stdout=subprocess.PIPE).stdout.read()
+
+        elif self.recorder == "internal":
+            self.recfile = Recorder(self.tmp_storage_location + self.tmp_wav_file_name, 'wb', 2, 44100, 1024)
+            self.recfile.start_recording()
+            if verbose:
+                print("Recording started.")
+
+        # Tell Spotify to play a specified song
+        subprocess.Popen(
+            'osascript -e "tell application \\"Spotify\\"" -e "play track \\"' + track + '\\"" -e "end tell"',
+            shell=True, stdout=subprocess.PIPE).stdout.read()
+
+        time.sleep(1)
+
+        # Get the artist name, track name, album name and album artwork URL from Spotify
+        artist = subprocess.Popen(
+            'osascript -e "tell application \\"Spotify\\"" -e "current track\'s artist" -e "end tell"', shell=True,
+            stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
+        track = subprocess.Popen(
+            'osascript -e "tell application \\"Spotify\\"" -e "current track\'s name" -e "end tell"',
+            shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
+        album = subprocess.Popen(
+            'osascript -e "tell application \\"Spotify\\"" -e "current track\'s album" -e "end tell"',
+            shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
+        artwork = subprocess.Popen(
+            'osascript -e "tell application \\"Spotify\\"" -e "current track\'s artwork url" -e "end tell"', shell=True,
+            stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
+        artworkData = urlopen(artwork).read()
+
+        print("{}, {}".format(artist, track))
+
+        # Check every 500 milliseconds if Spotify has stopped playing
+        while subprocess.Popen('osascript -e "tell application \\"Spotify\\"" -e "player state" -e "end tell"',
+                               shell=True,
+                               stdout=subprocess.PIPE).stdout.read() == b"playing\n":
+            time.sleep(.500)
+
+        # Spotify has stopped playing, stop the recording in QT or Piezo
+        if self.recorder == "PIEZO":
+            subprocess.Popen(
+                'osascript -e "activate application \\"Piezo\\"" -e "tell application \\"System Events\\"" -e "keystroke \\"r\\" using {command down}" -e "end tell"',
+                shell=True, stdout=subprocess.PIPE).stdout.read()
+
+        elif self.recorder == "QT":
+            command = ["osascript",
+                       "-e",
+                       "set tFile to \"" + self.tmp_storage_location + self.tmp_m4a_file_name + "\" as posix file",
+                       "-e", "do shell script \"touch \" & quoted form of posix path of tFile",
+                       "-e", "tell application \"QuickTime Player\"",
+                       "-e", "pause document 1",
+                       "-e", "save document 1 in tFile",
+                       "-e", "stop document 1",
+                       "-e", "close document 1 saving no",
+                       "-e", "quit",
+                       "-e", "end tell"]
+            p = subprocess.Popen(command)
+
+            time.sleep(1.000)
+            print("Converting to mp3...")
+
+            # Convert m4a to mp3 using ffmpeg
+            try:
+                subprocess.call(['ffmpeg', '-i', f'{self.tmp_storage_location + self.tmp_m4a_file_name}',
+                                 f'{self.tmp_storage_location + self.tmp_mp3_file_name}'])
+            except Exception as e:
+                print(e)
+                print('Error While Converting Audio')
+
+        elif self.recorder == "internal":
+            self.recfile.stop_recording()
+            if verbose:
+                print("Recording stopped.")
+
+            if verbose:
+                print("Converting to mp3...")
+            try:
+                subprocess.call(
+                    ['ffmpeg', '-i', f'{self.tmp_storage_location + self.tmp_wav_file_name}',
+                     f'{self.tmp_storage_location + self.tmp_mp3_file_name}'])
+            except Exception as e:
+                print('Error While Converting Audio: {}'.format(e))
+            else:
+                if verbose:
+                    print("Converted.")
+
+        time.sleep(.500)
+        # '-loglevel', 'quiet'
+
+        # Create directory for the artist
+        if not os.path.exists(self.rip_storage_location + artist):
+            os.makedirs(self.rip_storage_location + artist)
+
+        # Create directory for the album
+        if not os.path.exists(self.rip_storage_location + artist + "/" + album):
+            os.makedirs(self.rip_storage_location + artist + "/" + album)
+
+        # Move MP3 file to the folder containing rips.
+        for f in os.listdir(self.tmp_storage_location):
+            if f.endswith(".mp3"):
+                shutil.move(self.tmp_storage_location + f,
+                            self.rip_storage_location + artist + "/" + album + "/" + track + ".mp3")
+
+        # Set and/or update ID3 information
+        musicFile = eyed3.load(self.rip_storage_location + artist + "/" + album + "/" + track + ".mp3")
+        musicFile.tag.images.set(3, artworkData, "image/jpeg", track)
+        musicFile.tag.artist = artist
+        musicFile.tag.album = album
+        musicFile.tag.title = track
+        musicFile.tag.save()
+
+
+def main():
+    # Understand what the command line input is
+
+    # A track URI or URL?
+    if sys.argv[1][:14] == "spotify:track:" or sys.argv[1][:31] == "https://open.spotify.com/track/":
+        tracks = [sys.argv[1]]
+
+    # A txt list with track URIs or URLs?
+    elif sys.argv[1][-4:] == ".txt":
+        ripper = Ripper()
+        file = open(sys.argv[1])
+        tracks = file.readlines()
+        file.close()
+
+    # A playlist URI or URL?
+    elif sys.argv[1][:17] == "spotify:playlist:" or sys.argv[1][:34] == "https://open.spotify.com/playlist/":
+        print(
+            "Fetching a playlist requires user authentication. Make sure Spotify Client ID and Client Secret are set.")
+
+        # Authenticating into spotify
+        auth_manager = SpotifyClientCredentials()
+        sp = spotipy.Spotify(auth_manager=auth_manager)
+
+        # Fetching tracks in the playlist
+        results = sp.playlist_items(sys.argv[1])
+        tracks = results['items']
+        while results['next']:
+            results = sp.next(results)
+            tracks.extend(results['items'])
+        uris = []
+        for item in (tracks):
+            track = item['track']
+            uris.append(track['uri'])
+        tracks = uris
+
+    else:
+        print("Unknown input")
+
+    # Rip
+    ripper = Ripper()
+    print("Ripping {} tracks.".format(len(tracks)))
+    for track in tracks:
+        track = convert_to_uri(track.rstrip())
+        print("Ripping track {}...".format(track))
+        ripper.rip(track)
+
+
+main()
