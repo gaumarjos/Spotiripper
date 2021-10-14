@@ -16,15 +16,14 @@ Non-blocking mode (start and stop recording):
 ...     recfile2.stop_recording()
 '''
 
-
-
 import pyaudio
 import wave
 import time
 
+
 class Recorder(object):
     def __init__(self, fname, mode, channels,
-                rate, frames_per_buffer):
+                 rate, frames_per_buffer):
         self.fname = fname
         self.mode = mode
         self.channels = channels
@@ -43,10 +42,10 @@ class Recorder(object):
     def record(self, duration):
         # Use a stream with no callback function in blocking mode
         self._stream = self._pa.open(format=pyaudio.paInt16,
-                                        channels=self.channels,
-                                        rate=self.rate,
-                                        input=True,
-                                        frames_per_buffer=self.frames_per_buffer)
+                                     channels=self.channels,
+                                     rate=self.rate,
+                                     input=True,
+                                     frames_per_buffer=self.frames_per_buffer)
         for _ in range(int(self.rate / self.frames_per_buffer * duration)):
             audio = self._stream.read(self.frames_per_buffer)
             self.wavefile.writeframes(audio)
@@ -55,11 +54,11 @@ class Recorder(object):
     def start_recording(self):
         # Use a stream with a callback in non-blocking mode
         self._stream = self._pa.open(format=pyaudio.paInt16,
-                                        channels=self.channels,
-                                        rate=self.rate,
-                                        input=True,
-                                        frames_per_buffer=self.frames_per_buffer,
-                                        stream_callback=self.get_callback())
+                                     channels=self.channels,
+                                     rate=self.rate,
+                                     input=True,
+                                     frames_per_buffer=self.frames_per_buffer,
+                                     stream_callback=self.get_callback())
         self._stream.start_stream()
         return self
 
@@ -71,8 +70,8 @@ class Recorder(object):
         def callback(in_data, frame_count, time_info, status):
             self.wavefile.writeframes(in_data)
             return in_data, pyaudio.paContinue
-        return callback
 
+        return callback
 
     def close(self):
         self._stream.close()

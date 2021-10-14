@@ -8,8 +8,6 @@ https://stackoverflow.com/questions/53761033/pydub-play-audio-from-variable
 
 import subprocess, sys, os, time, shutil, eyed3
 from urllib.request import urlopen
-import pyaudio
-import wave
 from recorder import Recorder
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
@@ -22,7 +20,7 @@ verbose = False
 def convert_to_uri(s):
     # It's already an URI
     if s[:14] == "spotify:track:" or s[:17] == "spotify:playlist:":
-        return (s)
+        return s
     # It's a track URL and must be converted into a track URI
     elif s[:31] == "https://open.spotify.com/track/":
         return "spotify:track:" + s[31:53]
@@ -40,6 +38,8 @@ class Ripper:
         self.ripped_folder_structure = ripped_folder_structure
         self.rip_storage_location = rip_storage_location
         self.recorder = "internal"
+        # self.converter = "ffmpeg"
+        self.converter = "pydub"
         self.tmp_storage_location = 'tmp/'
         self.tmp_m4a_file_name = "tmp.m4a"
         self.tmp_mp3_file_name = "tmp.mp3"
@@ -98,9 +98,10 @@ class Ripper:
         artwork = subprocess.Popen(
             'osascript -e "tell application \\"Spotify\\"" -e "current track\'s artwork url" -e "end tell"', shell=True,
             stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
-        artworkData = urlopen(artwork).read()
+        artworkdata = urlopen(artwork).read()
 
-        print(colorama.Back.GREEN, "{}, {}".format(artist, track).encode('utf-8').decode('utf-8'), colorama.Style.RESET_ALL)
+        print(colorama.Back.GREEN, "{}, {}".format(artist, track).encode('utf-8').decode('utf-8'),
+              colorama.Style.RESET_ALL)
 
         # Check every 500 milliseconds if Spotify has stopped playing
         while subprocess.Popen('osascript -e "tell application \\"Spotify\\"" -e "player state" -e "end tell"',
@@ -144,45 +145,53 @@ class Ripper:
             if verbose:
                 print("Recording stopped.")
 
-            # Remove noise and convert
-            sound = AudioSegment.from_file(self.tmp_storage_location + self.tmp_wav_file_name, format="wav")
-            # start_trim = detect_leading_silence(sound)
-            # end_trim = detect_leading_silence(sound.reverse())
-            start_trim = 200
-            trimmed_sound = sound[start_trim:]
-            output = AudioSegment.empty()
-            output = trimmed_sound
-            output.apply_gain(12.041199826559245)
-            output.export(self.tmp_storage_location + self.tmp_mp3_file_name, format="mp3")
+            if self.converter == "ffmpeg":
+                if verbose:
+                    print("Converting to mp3...")
+                try:
+                    subprocess.call(['ffmpeg',
+                                     '-loglevel',
+                                     'quiet',
+                                     '-channel_layout',
+                                     'stereo',
+                                     '-i', f'{self.tmp_storage_location + self.tmp_wav_file_name}',
+                                     '-af',
+                                     'volume=4.0',
+                                     f'{self.tmp_storage_location + self.tmp_mp3_file_name}'])
+                except Exception as e:
+                    print('Error during conversion: {}'.format(e))
+                else:
+                    if verbose:
+                        print("Converted.")
 
-            '''
-            if verbose:
-                print("Converting to mp3...")
-            try:
-                subprocess.call(['ffmpeg',
-                                 '-loglevel',
-                                 'quiet',
-                                 '-channel_layout',
-                                 'stereo',
-                                 '-i', f'{self.tmp_storage_location + self.tmp_wav_file_name}',
-                                 '-af',
-                                 'volume=4.0',
-                                 f'{self.tmp_storage_location + self.tmp_mp3_file_name}'])
-            except Exception as e:
-                print('Error during conversion: {}'.format(e))
-            else:
+            elif self.converter == "pydub":
+                if verbose:
+                    print("Converting to mp3...")
+
+                # Remove initial noise and convert
+                # For some reason the initial 160ms of the recording are sometimes a very high volume "white" noise
+                sound = AudioSegment.from_file(self.tmp_storage_location + self.tmp_wav_file_name, format="wav")
+                # start_trim = detect_leading_silence(sound)
+                # end_trim = detect_leading_silence(sound.reverse())
+                start_trim = 200
+                trimmed_sound = sound[start_trim:]
+                output = AudioSegment.empty()
+                output = trimmed_sound
+                output.apply_gain(12.041199826559245)
+                output.export(self.tmp_storage_location + self.tmp_mp3_file_name, format="mp3")
+
                 if verbose:
                     print("Converted.")
-            '''
+
         time.sleep(.500)
 
         # Set and/or update ID3 information
-        musicFile = eyed3.load(self.tmp_storage_location + self.tmp_mp3_file_name)
-        musicFile.tag.images.set(3, artworkData, "image/jpeg", track)
-        musicFile.tag.artist = artist
-        musicFile.tag.album = album
-        musicFile.tag.title = track
-        musicFile.tag.save()
+        mp3file = eyed3.load(self.tmp_storage_location + self.tmp_mp3_file_name)
+        mp3file.tag.images.set(3, artworkdata, "image/jpeg", track)
+        mp3file.tag.artist = artist
+        mp3file.tag.album = album
+        mp3file.tag.title = track
+        mp3file.tag.save()
 
         # Move to final location
         if self.ripped_folder_structure == "flat":
@@ -211,49 +220,58 @@ def main():
     colorama.init()
 
     # Understand what the command line input is
-
-    # A track URI or URL?
-    if sys.argv[1][:14] == "spotify:track:" or sys.argv[1][:31] == "https://open.spotify.com/track/":
-        tracks = [sys.argv[1]]
-
-    # A txt list with track URIs or URLs?
-    elif sys.argv[1][-4:] == ".txt":
-        ripper = Ripper()
-        file = open(sys.argv[1])
-        tracks = file.readlines()
-        file.close()
-
-    # A playlist URI or URL?
-    elif sys.argv[1][:17] == "spotify:playlist:" or sys.argv[1][:34] == "https://open.spotify.com/playlist/":
-        print(
-            "Fetching a playlist requires user authentication. Make sure Spotify Client ID and Client Secret are set.")
-
-        # Authenticating into spotify
-        auth_manager = SpotifyClientCredentials()
-        sp = spotipy.Spotify(auth_manager=auth_manager)
-
-        # Fetching tracks in the playlist
-        results = sp.playlist_items(sys.argv[1])
-        tracks = results['items']
-        while results['next']:
-            results = sp.next(results)
-            tracks.extend(results['items'])
-        uris = []
-        for item in (tracks):
-            track = item['track']
-            uris.append(track['uri'])
-        tracks = uris
+    if len(sys.argv[1]) < 14:
+        print("Usage:")
+        print("    spotiripper <track URI>")
+        print("    spotiripper <track URL>")
+        print("    spotiripper <list.txt containing track URIs or URLs>")
+        print("    spotiripper <playlist URI>    Note: requires setting Spotify Client ID and Client Secret keys.")
+        print("    spotiripper <playlist URL>    Note: requires setting Spotify Client ID and Client Secret keys.")
+        return -1
 
     else:
-        print("Unknown input")
+        # A track URI or URL?
+        if sys.argv[1][:14] == "spotify:track:" or sys.argv[1][:31] == "https://open.spotify.com/track/":
+            tracks = [sys.argv[1]]
 
-    # Rip
-    ripper = Ripper()
-    print("Ripping {} tracks.".format(len(tracks)))
-    for track in tracks:
-        track = convert_to_uri(track.rstrip())
-        print("Ripping track {}...".format(track))
-        ripper.rip(track)
+        # A txt list with track URIs or URLs?
+        elif sys.argv[1][-4:] == ".txt":
+            file = open(sys.argv[1])
+            tracks = file.readlines()
+            file.close()
+
+        # A playlist URI or URL?
+        elif sys.argv[1][:17] == "spotify:playlist:" or sys.argv[1][:34] == "https://open.spotify.com/playlist/":
+            print(
+                "Fetching a playlist requires user authentication. Make sure Spotify Client ID and Client Secret are set.")
+
+            # Authenticating into spotify
+            auth_manager = SpotifyClientCredentials()
+            sp = spotipy.Spotify(auth_manager=auth_manager)
+
+            # Fetching tracks in the playlist
+            results = sp.playlist_items(sys.argv[1])
+            tracks = results['items']
+            while results['next']:
+                results = sp.next(results)
+                tracks.extend(results['items'])
+            uris = []
+            for item in tracks:
+                track = item['track']
+                uris.append(track['uri'])
+            tracks = uris
+
+        else:
+            print("Unknown input")
+            tracks = []
+
+        # Rip
+        ripper = Ripper()
+        print("Ripping {} tracks.".format(len(tracks)))
+        for track in tracks:
+            track = convert_to_uri(track.rstrip())
+            print("Ripping track {}...".format(track))
+            ripper.rip(track)
 
 
 main()
