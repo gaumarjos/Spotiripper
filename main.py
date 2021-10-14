@@ -3,6 +3,7 @@ DOCUMENTATION
 https://spotipy.readthedocs.io/en/2.19.0/
 https://github.com/skybjohnson/spotipy_examples/blob/master/playlist_tracks_and_genre.py
 https://stackoverflow.com/questions/53761033/pydub-play-audio-from-variable
+https://betterprogramming.pub/simple-audio-processing-in-python-with-pydub-c3a217dabf11
 
 '''
 
@@ -100,8 +101,18 @@ class Ripper:
             stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
         artworkdata = urlopen(artwork).read()
 
-        print(colorama.Back.GREEN, "{}, {}".format(artist, track).encode('utf-8').decode('utf-8'),
-              colorama.Style.RESET_ALL)
+        try:
+            print(colorama.Back.LIGHTGREEN_EX,
+                  "{}, {}".format(artist, track),
+                  colorama.Style.RESET_ALL)
+        except:
+            print(colorama.Back.LIGHTGREEN_EX,
+                  "{}, {}".format(artist, track).encode('ascii', 'replace'),
+                  colorama.Style.RESET_ALL)
+            print(colorama.Fore.LIGHTYELLOW_EX,
+                  "The song name contains accented characters that cannot be displayed correctly. Make sure you set \"export PYTHONIOENCODING=utf-8\".",
+                  colorama.Style.RESET_ALL)
+            print("The song name contains ")
 
         # Check every 500 milliseconds if Spotify has stopped playing
         while subprocess.Popen('osascript -e "tell application \\"Spotify\\"" -e "player state" -e "end tell"',
@@ -142,6 +153,7 @@ class Ripper:
 
         elif self.recorder == "internal":
             self.recfile.stop_recording()
+            self.recfile.close()
             if verbose:
                 print("Recording stopped.")
 
@@ -218,9 +230,11 @@ class Ripper:
 
 def main():
     colorama.init()
+    if not os.environ.get('PYTHONIOENCODING'):
+        os.environ['PYTHONIOENCODING'] = str("utf-8")
 
     # Understand what the command line input is
-    if len(sys.argv[1]) < 14:
+    if len(sys.argv[1]) < 4:
         print("Usage:")
         print("    spotiripper <track URI>")
         print("    spotiripper <track URL>")
@@ -266,9 +280,9 @@ def main():
             tracks = []
 
         # Rip
-        ripper = Ripper()
         print("Ripping {} tracks.".format(len(tracks)))
         for track in tracks:
+            ripper = Ripper()
             track = convert_to_uri(track.rstrip())
             print("Ripping track {}...".format(track))
             ripper.rip(track)
