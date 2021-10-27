@@ -4,6 +4,7 @@ spotiripper.spec
 set_spotify_keys.sh
 build/
 dist/
+tmp/
 .DS_Store
 .idea/
 __pycache__/

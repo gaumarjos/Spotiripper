@@ -8,7 +8,8 @@ https://betterprogramming.pub/simple-audio-processing-in-python-with-pydub-c3a21
 
 import subprocess, sys, os, time, shutil, eyed3
 from urllib.request import urlopen
-from recorder_pyaudio import Recorder
+# from recorder_pyaudio import Recorder
+from recorder_sounddevice import Recorder
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import colorama
@@ -38,8 +39,8 @@ class Ripper:
         self.ripped_folder_structure = ripped_folder_structure
         self.rip_storage_location = rip_storage_location
         self.recorder = "internal"
-        # self.converter = "ffmpeg"
-        self.converter = "pydub"
+        self.converter = "ffmpeg"
+        # self.converter = "pydub"
         self.tmp_storage_location = 'tmp/'
         self.tmp_m4a_file_name = "tmp.m4a"
         self.tmp_mp3_file_name = "tmp.mp3"
@@ -73,7 +74,7 @@ class Ripper:
                 shell=True, stdout=subprocess.PIPE).stdout.read()
 
         elif self.recorder == "internal":
-            self.recfile = Recorder(self.tmp_storage_location + self.tmp_wav_file_name, 'wb', 2, 44100, 1024)
+            self.recfile = Recorder(self.tmp_storage_location + self.tmp_wav_file_name)
             self.recfile.start_recording()
             if verbose:
                 print("Recording started.")
@@ -159,14 +160,16 @@ class Ripper:
                     print("Converting to mp3...")
                 try:
                     subprocess.call(['ffmpeg',
-                                     '-loglevel',
-                                     'quiet',
                                      '-channel_layout',
                                      'stereo',
                                      '-i', f'{self.tmp_storage_location + self.tmp_wav_file_name}',
                                      '-af',
                                      'volume=4.0',
                                      f'{self.tmp_storage_location + self.tmp_mp3_file_name}'])
+                    '''
+                    '-loglevel',
+                    'quiet',
+                    '''
                 except Exception as e:
                     print('Error during conversion: {}'.format(e))
                 else:

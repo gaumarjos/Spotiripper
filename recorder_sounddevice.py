@@ -90,16 +90,17 @@ class Recorder(object):
     def _record(self, arg):
         t = threading.current_thread()
 
-        with sf.SoundFile(self.fname, mode=self.mode, samplerate=self.rate,
-                          channels=self.channels, subtype=self.subtype) as file:
-            with sd.InputStream(samplerate=self.rate, device=self.device,
-                                channels=self.channels, callback=self._callback):
-                print('#' * 80)
-                print('press Ctrl+C to stop the recording')
-                print('#' * 80)
+        with sf.SoundFile(self.fname,
+                          mode=self.mode,
+                          samplerate=self.rate,
+                          channels=self.channels,
+                          subtype=self.subtype) as file:
+            with sd.InputStream(samplerate=self.rate,
+                                device=self.device,
+                                channels=self.channels,
+                                callback=self._callback):
                 while getattr(t, "do_run", True):
                     file.write(self.q.get())
-                print("Stopping as you wish.")
 
     def start_recording(self):
         self.t = threading.Thread(target=self._record, args=("task",))
