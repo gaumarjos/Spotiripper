@@ -11,7 +11,6 @@ self.recfile.start_recording()
 self.recfile.stop_recording()
 '''
 
-import time
 import tempfile
 import queue
 import sys

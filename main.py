@@ -13,7 +13,8 @@ from recorder_sounddevice import Recorder
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import colorama
-from pydub import AudioSegment
+from converter_pydub import convert_to_mp3
+# from converter_ffmpeg import convert_to_mp3
 
 verbose = False
 
@@ -39,8 +40,8 @@ class Ripper:
         self.ripped_folder_structure = ripped_folder_structure
         self.rip_storage_location = rip_storage_location
         self.recorder = "internal"
-        self.converter = "ffmpeg"
-        # self.converter = "pydub"
+        # self.converter = "ffmpeg"
+        self.converter = "pydub"
         self.tmp_storage_location = 'tmp/'
         self.tmp_m4a_file_name = "tmp.m4a"
         self.tmp_mp3_file_name = "tmp.mp3"
@@ -154,46 +155,14 @@ class Ripper:
             self.recfile.stop_recording()
             if verbose:
                 print("Recording stopped.")
+                print("Converting to mp3...")
 
-            if self.converter == "ffmpeg":
-                if verbose:
-                    print("Converting to mp3...")
-                try:
-                    subprocess.call(['ffmpeg',
-                                     '-channel_layout',
-                                     'stereo',
-                                     '-i', f'{self.tmp_storage_location + self.tmp_wav_file_name}',
-                                     '-af',
-                                     'volume=4.0',
-                                     f'{self.tmp_storage_location + self.tmp_mp3_file_name}'])
-                    '''
-                    '-loglevel',
-                    'quiet',
-                    '''
-                except Exception as e:
-                    print('Error during conversion: {}'.format(e))
-                else:
-                    if verbose:
-                        print("Converted.")
-
-            elif self.converter == "pydub":
-                if verbose:
-                    print("Converting to mp3...")
-
-                # Remove initial noise and convert
-                # For some reason the initial 160ms of the recording are sometimes a very high volume "white" noise
-                sound = AudioSegment.from_file(self.tmp_storage_location + self.tmp_wav_file_name, format="wav")
-                # start_trim = detect_leading_silence(sound)
-                # end_trim = detect_leading_silence(sound.reverse())
-                start_trim = 200
-                trimmed_sound = sound[start_trim:]
-                output = AudioSegment.empty()
-                output = trimmed_sound
-                output.apply_gain(12.041199826559245)
-                output.export(self.tmp_storage_location + self.tmp_mp3_file_name, format="mp3")
-
+            if convert_to_mp3(self.tmp_storage_location + self.tmp_wav_file_name,
+                              self.tmp_storage_location + self.tmp_mp3_file_name):
                 if verbose:
                     print("Converted.")
+            else:
+                print("Error in conversion.")
 
         time.sleep(.500)
 
