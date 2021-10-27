@@ -1,24 +1,27 @@
 # -*- coding: utf-8 -*-
-'''recorder.py
+'''
+DOCUMENTATION
 https://raspberrypi.stackexchange.com/questions/69611/pyaudio-record-audio-using-non-blocking-callback
-Provides WAV recording functionality via two approaches:
+https://dolby.io/blog/capturing-high-quality-audio-with-python-and-pyaudio/
+'''
 
+'''
 Blocking mode (record for a set duration):
->>> rec = Recorder(channels=2)
->>> with rec.open('blocking.wav', 'wb') as recfile:
-...     recfile.record(duration=5.0)
+rec = Recorder(channels=2)
+with rec.open('blocking.wav', 'wb') as recfile:
+    recfile.record(duration=5.0)
+'''
 
+'''
 Non-blocking mode (start and stop recording):
->>> rec = Recorder(channels=2)
->>> with rec.open('nonblocking.wav', 'wb') as recfile2:
-...     recfile2.start_recording()
-...     time.sleep(5.0)
-...     recfile2.stop_recording()
+self.recfile = Recorder(filename, 'wb', 2, 44100, 1024)
+self.recfile.start_recording()
+...
+self.recfile.stop_recording()
 '''
 
 import pyaudio
 import wave
-import time
 
 
 class Recorder(object):
@@ -38,6 +41,20 @@ class Recorder(object):
 
     def __exit__(self, exception, value, traceback):
         self.close()
+
+    def getinfo(self):
+        # Version
+        print(pyaudio.get_portaudio_version())
+
+        # Default devices
+        print(self._pa.get_default_output_device_info())
+        print(self._pa.get_default_input_device_info())
+
+        # All devices
+        for id in range(self._pa.get_device_count()):
+            dev_dict = self._pa.get_device_info_by_index(id)
+            for key, value in dev_dict.items():
+                print(key, value)
 
     def record(self, duration):
         # Use a stream with no callback function in blocking mode
@@ -84,13 +101,3 @@ class Recorder(object):
         wavefile.setsampwidth(self._pa.get_sample_size(pyaudio.paInt16))
         wavefile.setframerate(self.rate)
         return wavefile
-
-
-'''
-recfile2 = Recorder("wav_output_filename_2.wav", 'wb', 2, 44100, 1024)
-recfile2.start_recording()
-print("Started")
-time.sleep(5.0)
-recfile2.stop_recording()
-print("Stopped")
-'''
