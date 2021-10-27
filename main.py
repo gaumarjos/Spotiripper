@@ -9,7 +9,7 @@ https://betterprogramming.pub/simple-audio-processing-in-python-with-pydub-c3a21
 
 import subprocess, sys, os, time, shutil, eyed3
 from urllib.request import urlopen
-from recorder import Recorder
+from recorder_pyaudio import Recorder
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import colorama

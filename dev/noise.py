@@ -2,7 +2,7 @@ import subprocess, sys, os, time, shutil, eyed3
 from urllib.request import urlopen
 import pyaudio
 import wave
-from recorder import Recorder
+from recorder_pyaudio import Recorder
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import colorama

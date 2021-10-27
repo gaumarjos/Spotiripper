@@ -3,14 +3,21 @@ DOCUMENTATION
 https://python-sounddevice.readthedocs.io/en/0.4.3/examples.html
 '''
 
-import sounddevice as sd
+'''
+Non-blocking mode (start and stop recording):
+self.recfile = Recorder(filename)
+self.recfile.start_recording()
+...
+self.recfile.stop_recording()
+'''
+
 import time
-import argparse
 import tempfile
 import queue
 import sys
 import sounddevice as sd
 import soundfile as sf
+import threading
 import numpy  # Make sure NumPy is loaded before it is used in the callback
 
 assert numpy  # avoid "imported but unused" message (W0611)
@@ -53,6 +60,7 @@ class Recorder(object):
         self.frames_per_buffer = frames_per_buffer
 
         self.q = queue.Queue()
+        self.t = None
 
     def getinfo(self):
         # Version
@@ -73,24 +81,29 @@ class Recorder(object):
         print("Channels: {}".format(self.channels))
         print("Rate #: {}".format(self.rate))
 
-    def callback(self, indata, frames, time, status):
+    def _callback(self, indata, frames, time, status):
         """This is called (from a separate thread) for each audio block."""
         if status:
             print(status, file=sys.stderr)
         self.q.put(indata.copy())
 
-    def record(self, duration):
+    def _record(self, arg):
+        t = threading.current_thread()
+
         with sf.SoundFile(self.fname, mode=self.mode, samplerate=self.rate,
                           channels=self.channels, subtype=self.subtype) as file:
             with sd.InputStream(samplerate=self.rate, device=self.device,
-                                channels=self.channels, callback=self.callback):
+                                channels=self.channels, callback=self._callback):
                 print('#' * 80)
                 print('press Ctrl+C to stop the recording')
                 print('#' * 80)
-                while True:
+                while getattr(t, "do_run", True):
                     file.write(self.q.get())
+                print("Stopping as you wish.")
 
+    def start_recording(self):
+        self.t = threading.Thread(target=self._record, args=("task",))
+        self.t.start()
 
-rec = Recorder("ciao.wav")
-rec.getinfo()
-rec.record(10)
+    def stop_recording(self):
+        self.t.do_run = False
