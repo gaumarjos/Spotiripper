@@ -25,8 +25,7 @@ import wave
 
 
 class Recorder(object):
-    def __init__(self, fname, mode, channels,
-                 rate, frames_per_buffer):
+    def __init__(self, fname, mode='wb', channels='2', rate=44100, frames_per_buffer=1024):
         self.fname = fname
         self.mode = mode
         self.channels = channels
