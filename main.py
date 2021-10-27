@@ -4,7 +4,6 @@ https://spotipy.readthedocs.io/en/2.19.0/
 https://github.com/skybjohnson/spotipy_examples/blob/master/playlist_tracks_and_genre.py
 https://stackoverflow.com/questions/53761033/pydub-play-audio-from-variable
 https://betterprogramming.pub/simple-audio-processing-in-python-with-pydub-c3a217dabf11
-
 '''
 
 import subprocess, sys, os, time, shutil, eyed3

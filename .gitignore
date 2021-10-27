@@ -1,3 +1,9 @@
-venv/
+.python-version
+.cache
+spotiripper.spec
 set_spotify_keys.sh
-dev/lista.txt
+build/
+dist/
+.DS_Store
+.idea/
+__pycache__/
