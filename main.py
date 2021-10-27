@@ -112,7 +112,6 @@ class Ripper:
             print(colorama.Fore.LIGHTYELLOW_EX,
                   "The song name contains accented characters that cannot be displayed correctly. Make sure you set \"export PYTHONIOENCODING=utf-8\".",
                   colorama.Style.RESET_ALL)
-            print("The song name contains ")
 
         # Check every 500 milliseconds if Spotify has stopped playing
         while subprocess.Popen('osascript -e "tell application \\"Spotify\\"" -e "player state" -e "end tell"',
@@ -153,7 +152,6 @@ class Ripper:
 
         elif self.recorder == "internal":
             self.recfile.stop_recording()
-            self.recfile.close()
             if verbose:
                 print("Recording stopped.")
 
