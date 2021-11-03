@@ -20,18 +20,55 @@ self.recfile.start_recording()
 self.recfile.stop_recording()
 '''
 
+import tempfile
+import colorama
 import pyaudio
 import wave
 
 
 class Recorder(object):
-    def __init__(self, fname, mode='wb', channels='2', rate=44100, frames_per_buffer=1024):
-        self.fname = fname
-        self.mode = mode
-        self.channels = channels
-        self.rate = rate
-        self.frames_per_buffer = frames_per_buffer
+    def __init__(self, fname=None):
+
+        if fname is None:
+            self.fname = tempfile.mktemp(prefix='pyaudio_', suffix='.wav', dir='')
+        else:
+            self.fname = fname
+
+        self.mode = 'wb'
+
         self._pa = pyaudio.PyAudio()
+        self.default_output_device = self._pa.get_default_output_device_info()
+        self.default_input_device = self._pa.get_default_input_device_info()
+
+        if "blackhole" not in self.default_input_device['name'].lower():
+            print(colorama.Fore.LIGHTYELLOW_EX,
+                  "Warning: the input device '{}' seems not to be 'BlackHole'".format(
+                      self.default_input_device['name']),
+                  colorama.Style.RESET_ALL)
+
+        self.channels = int(self.default_input_device['maxInputChannels'])
+        if self.channels != 2:
+            print(colorama.Fore.LIGHTYELLOW_EX,
+                  "Warning: the number of channels ({}) is not 2.".format(self.channels),
+                  colorama.Style.RESET_ALL)
+
+        self.rate = int(self.default_input_device['defaultSampleRate'])
+
+        # Check output device (not strictly necessary for recording, just making sure output and input parameters
+        # correspond)
+        if self.default_output_device['maxOutputChannels'] != self.channels:
+            print(colorama.Fore.LIGHTYELLOW_EX,
+                  "Warning: the number of channels of the output ({}) and input ({}) devices do not correspond.".format(
+                      self.default_output_device['maxOutputChannels'], self.channels),
+                  colorama.Style.RESET_ALL)
+        if self.default_output_device['defaultSampleRate'] != self.rate:
+            print(colorama.Fore.LIGHTYELLOW_EX,
+                  "Warning: the sample rate of the output ({}) and input ({}) devices do not correspond.".format(
+                      self.default_output_device['defaultSampleRate'], self.rate),
+                  colorama.Style.RESET_ALL)
+
+        self.frames_per_buffer = 1024
+
         self.wavefile = self._prepare_file(self.fname, self.mode)
         self._stream = None
 
@@ -42,18 +79,35 @@ class Recorder(object):
         self.close()
 
     def getinfo(self):
-        # Version
+        print(80 * '*')
+        print("Portaudio version")
         print(pyaudio.get_portaudio_version())
+        print()
 
-        # Default devices
-        print(self._pa.get_default_output_device_info())
-        print(self._pa.get_default_input_device_info())
+        print("Recording file")
+        print(self.fname)
+        print()
 
-        # All devices
+        print("All devices")
         for id in range(self._pa.get_device_count()):
             dev_dict = self._pa.get_device_info_by_index(id)
             for key, value in dev_dict.items():
                 print(key, value)
+            print()
+        print()
+
+        print("Output device")
+        print(self.default_output_device)
+        print()
+
+        print("Input device")
+        print(self.default_input_device)
+        print()
+
+        print("Device that will be used:")
+        print("Channels: {}".format(self.channels))
+        print("Rate #: {}".format(self.rate))
+        print(80 * '*')
 
     def record(self, duration):
         # Use a stream with no callback function in blocking mode
@@ -100,3 +154,7 @@ class Recorder(object):
         wavefile.setsampwidth(self._pa.get_sample_size(pyaudio.paInt16))
         wavefile.setframerate(self.rate)
         return wavefile
+
+
+a = Recorder()
+a.getinfo()
