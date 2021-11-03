@@ -19,7 +19,7 @@ import soundfile as sf
 import threading
 import colorama
 import numpy  # Make sure NumPy is loaded before it is used in the callback
-from dev.bar import SoundBar
+from bar import SoundBar
 
 assert numpy  # avoid "imported but unused" message (W0611)
 

@@ -24,6 +24,8 @@ import tempfile
 import colorama
 import pyaudio
 import wave
+from bar import SoundBar
+import numpy
 
 
 class Recorder(object):
@@ -71,6 +73,8 @@ class Recorder(object):
 
         self.wavefile = self._prepare_file(self.fname, self.mode)
         self._stream = None
+
+        self.bar = SoundBar(maxvalue=1.0)
 
     def __enter__(self):
         return self
@@ -144,6 +148,7 @@ class Recorder(object):
     def get_callback(self):
         def callback(in_data, frame_count, time_info, status):
             self.wavefile.writeframes(in_data)
+            self.bar.update(numpy.max(numpy.fromstring(in_data, numpy.int16) / 65535.0))
             return in_data, pyaudio.paContinue
 
         return callback
