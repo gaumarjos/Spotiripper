@@ -10,13 +10,12 @@ https://betterprogramming.pub/simple-audio-processing-in-python-with-pydub-c3a21
 import subprocess, sys, os, time, shutil, eyed3
 from urllib.request import urlopen
 # from recorder_pyaudio import Recorder
+from converter_pydub import convert_to_mp3
+# from converter_ffmpeg import convert_to_mp3
 from recorder_sounddevice import Recorder
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import colorama
-from converter_pydub import convert_to_mp3
-
-# from converter_ffmpeg import convert_to_mp3
 
 verbose = False
 
