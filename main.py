@@ -15,6 +15,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import colorama
 from converter_pydub import convert_to_mp3
+
 # from converter_ffmpeg import convert_to_mp3
 
 verbose = False
@@ -211,6 +212,8 @@ def main():
         print("    spotiripper <list.txt containing track URIs or URLs>")
         print("    spotiripper <playlist URI>    Note: requires setting Spotify Client ID and Client Secret keys.")
         print("    spotiripper <playlist URL>    Note: requires setting Spotify Client ID and Client Secret keys.")
+        print("    spotiripper <album URI>    Note: requires setting Spotify Client ID and Client Secret keys.")
+        print("    spotiripper <album URL>    Note: requires setting Spotify Client ID and Client Secret keys.")
         return -1
 
     else:
@@ -226,24 +229,51 @@ def main():
 
         # A playlist URI or URL?
         elif sys.argv[1][:17] == "spotify:playlist:" or sys.argv[1][:34] == "https://open.spotify.com/playlist/":
-            print(
-                "Fetching a playlist requires user authentication. Make sure Spotify Client ID and Client Secret are set.")
+            if os.environ.get("SPOTIPY_CLIENT_ID") is not None and os.environ.get("SPOTIPY_CLIENT_SECRET") is not None:
+                # Authenticating into spotify
+                auth_manager = SpotifyClientCredentials()
+                sp = spotipy.Spotify(auth_manager=auth_manager)
 
-            # Authenticating into spotify
-            auth_manager = SpotifyClientCredentials()
-            sp = spotipy.Spotify(auth_manager=auth_manager)
+                # Fetching tracks in the playlist
+                results = sp.playlist_items(sys.argv[1])
+                items = results['items']
+                while results['next']:
+                    results = sp.next(results)
+                    items.extend(results['items'])
+                uris = []
+                for item in items:
+                    track = item['track']
+                    uris.append(track['uri'])
+                tracks = uris
+            else:
+                print(colorama.Fore.LIGHTRED_EX,
+                      "Error: fetching a playlist requires user authentication. Make sure Spotify Client ID and Client Secret are set.",
+                      colorama.Style.RESET_ALL)
+                tracks = []
 
-            # Fetching tracks in the playlist
-            results = sp.playlist_items(sys.argv[1])
-            tracks = results['items']
-            while results['next']:
-                results = sp.next(results)
-                tracks.extend(results['items'])
-            uris = []
-            for item in tracks:
-                track = item['track']
-                uris.append(track['uri'])
-            tracks = uris
+        # An album URI or URL?
+        elif sys.argv[1][:14] == "spotify:album:" or sys.argv[1][:31] == "https://open.spotify.com/album/":
+            if os.environ.get("SPOTIPY_CLIENT_ID") is not None and os.environ.get("SPOTIPY_CLIENT_SECRET") is not None:
+                # Authenticating into spotify
+                auth_manager = SpotifyClientCredentials()
+                sp = spotipy.Spotify(auth_manager=auth_manager)
+
+                # Fetching tracks in the album
+                results = sp.album_tracks(sys.argv[1])
+                items = results['items']
+                while results['next']:
+                    results = sp.next(results)
+                    items.extend(results['items'])
+                urls = []
+                for item in items:
+                    track = item['external_urls']
+                    urls.append(track['spotify'])
+                tracks = urls
+            else:
+                print(colorama.Fore.LIGHTRED_EX,
+                      "Error: fetching an album requires user authentication. Make sure Spotify Client ID and Client Secret are set.",
+                      colorama.Style.RESET_ALL)
+                tracks = []
 
         else:
             print("Unknown input")

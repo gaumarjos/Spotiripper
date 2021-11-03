@@ -73,7 +73,7 @@ class Recorder(object):
         self.t = None
 
     def getinfo(self):
-        print(80*'*')
+        print(80 * '*')
         print("Portaudio version")
         print(sd.get_portaudio_version())
         print()
@@ -123,5 +123,5 @@ class Recorder(object):
         self.t.join()
 
 
-a = Recorder()
-a.getinfo()
+# a = Recorder()
+# a.getinfo()

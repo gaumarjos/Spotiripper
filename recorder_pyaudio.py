@@ -156,5 +156,5 @@ class Recorder(object):
         return wavefile
 
 
-a = Recorder()
-a.getinfo()
+# a = Recorder()
+# a.getinfo()
