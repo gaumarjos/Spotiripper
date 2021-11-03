@@ -1,5 +1,6 @@
 '''
 DOCUMENTATION
+https://bartsimons.me/ripping-spotify-songs-on-macos/
 https://spotipy.readthedocs.io/en/2.19.0/
 https://github.com/skybjohnson/spotipy_examples/blob/master/playlist_tracks_and_genre.py
 https://stackoverflow.com/questions/53761033/pydub-play-audio-from-variable

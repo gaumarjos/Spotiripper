@@ -107,3 +107,4 @@ class Recorder(object):
 
     def stop_recording(self):
         self.t.do_run = False
+        self.t.join()
