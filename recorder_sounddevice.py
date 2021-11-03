@@ -19,6 +19,7 @@ import soundfile as sf
 import threading
 import colorama
 import numpy  # Make sure NumPy is loaded before it is used in the callback
+from dev.bar import SoundBar
 
 assert numpy  # avoid "imported but unused" message (W0611)
 
@@ -72,6 +73,8 @@ class Recorder(object):
         self.q = queue.Queue()
         self.t = None
 
+        self.bar = SoundBar(maxvalue=1.0)
+
     def getinfo(self):
         print(80 * '*')
         print("Portaudio version")
@@ -112,7 +115,9 @@ class Recorder(object):
                                 channels=self.channels,
                                 callback=self._callback):
                 while getattr(t, "do_run", True):
-                    file.write(self.q.get())
+                    block = self.q.get()
+                    self.bar.update(numpy.mean(numpy.max(block, axis=0)))
+                    file.write(block)
 
     def start_recording(self):
         self.t = threading.Thread(target=self._record, args=("task",))

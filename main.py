@@ -9,8 +9,8 @@ https://betterprogramming.pub/simple-audio-processing-in-python-with-pydub-c3a21
 
 import subprocess, sys, os, time, shutil, eyed3
 from urllib.request import urlopen
-from recorder_pyaudio import Recorder
-# from recorder_sounddevice import Recorder
+# from recorder_pyaudio import Recorder
+from recorder_sounddevice import Recorder
 from converter_pydub import convert_to_mp3
 # from converter_ffmpeg import convert_to_mp3
 import spotipy
@@ -91,9 +91,10 @@ class Ripper:
             stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
         artworkdata = urlopen(artwork).read()
 
+        toprint = "{}, {}".format(artist, track)
         try:
             print(colorama.Back.LIGHTGREEN_EX,
-                  "{}, {}".format(artist, track),
+                  toprint + (110 - len(toprint)) * ' ',
                   colorama.Style.RESET_ALL)
         except:
             print(colorama.Back.LIGHTGREEN_EX,
