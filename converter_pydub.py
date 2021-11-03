@@ -1,7 +1,7 @@
 from pydub import AudioSegment
 
 
-def convert_to_mp3(infile, outfile):
+def convert_to_mp3(infile, outfile, gaindb=0):
     try:
         # Remove initial noise and convert
         # For some reason the initial 160ms of the recording are sometimes a very high volume "white" noise
@@ -12,7 +12,7 @@ def convert_to_mp3(infile, outfile):
         trimmed_sound = sound[start_trim:]
         output = AudioSegment.empty()
         output = trimmed_sound
-        output.apply_gain(12.041199826559245)
+        output.apply_gain(gaindb)
         output.export(outfile, format="mp3")
     except Exception as e:
         print('Error during conversion: {}'.format(e))

@@ -134,6 +134,11 @@ class Recorder(object):
 
     def stop_recording(self):
         self._stream.stop_stream()
+
+        # The following 3 lines seems to be unnecessary. I put them there to be extra sure nothing is left open.
+        self._stream.close()
+        self._pa.terminate()
+        self.wavefile.close()
         return self
 
     def get_callback(self):
@@ -142,11 +147,6 @@ class Recorder(object):
             return in_data, pyaudio.paContinue
 
         return callback
-
-    def close(self):
-        self._stream.close()
-        self._pa.terminate()
-        self.wavefile.close()
 
     def _prepare_file(self, fname, mode='wb'):
         wavefile = wave.open(fname, mode)
