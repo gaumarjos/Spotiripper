@@ -22,3 +22,6 @@ If you also want to listen to the music while recording you will need to create 
 ![alt text1](docs/audio_output.png "Output")
 
 Make sure the volume slider in BlackHole is set to 1.0 (0.0dB) not to have an attenuated recording. If this is necessary for whatever reason, it's still possible to recover that in spotiripper (`gaindb` parameter in `converter_pydub.py`).
+
+## Bugs
+Sounddevice, the only one with the soundbar, sometimes picks the wrong default input and starts recording from the microphone although it doesn't tell in the init because no warning is raised. Weird.
