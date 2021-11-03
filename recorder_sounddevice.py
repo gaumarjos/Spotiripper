@@ -17,13 +17,14 @@ import sys
 import sounddevice as sd
 import soundfile as sf
 import threading
+import colorama
 import numpy  # Make sure NumPy is loaded before it is used in the callback
 
 assert numpy  # avoid "imported but unused" message (W0611)
 
 
 class Recorder(object):
-    def __init__(self, fname=None, mode=None, device=None, channels=None, rate=None, frames_per_buffer=None):
+    def __init__(self, fname=None, mode=None, device=None, channels=None, rate=None):
 
         if fname is None:
             self.fname = tempfile.mktemp(prefix='delme_rec_unlimited_', suffix='.wav', dir='')
@@ -35,9 +36,13 @@ class Recorder(object):
         else:
             self.mode = mode
 
+        raw_devices = sd.query_devices()
         if device is None:
-            raw_devices = sd.query_devices()
             default_input_device = sd.query_devices(kind='input')
+            if "blackhole" not in default_input_device['name'].lower():
+                print(colorama.Fore.LIGHTYELLOW_EX,
+                      "Warning: the input device '{}' seems not to be 'BlackHole'".format(default_input_device['name']),
+                      colorama.Style.RESET_ALL)
             self.device = raw_devices.index(default_input_device)
         else:
             self.device = device
@@ -46,6 +51,10 @@ class Recorder(object):
 
         if channels is None:
             self.channels = int(self.device_info['max_input_channels'])
+            if self.channels != 2:
+                print(colorama.Fore.LIGHTYELLOW_EX,
+                      "Warning: the number of channels ({}) is not 2.".format(self.channels),
+                      colorama.Style.RESET_ALL)
         else:
             self.channels = channels
 
@@ -54,9 +63,21 @@ class Recorder(object):
         else:
             self.rate = rate
 
-        self.subtype = None
+        # Check output device (not strictly necessary for recording, just making sure output and input parameters
+        # correspond)
+        default_output_device = sd.query_devices(kind='output')
+        if default_output_device['max_output_channels'] != self.channels:
+            print(colorama.Fore.LIGHTYELLOW_EX,
+                  "Warning: the number of channels of the output ({}) and input ({}) devices do not correspond.".format(
+                      default_output_device['max_output_channels'], self.channels),
+                  colorama.Style.RESET_ALL)
+        if default_output_device['default_samplerate'] != self.rate:
+            print(colorama.Fore.LIGHTYELLOW_EX,
+                  "Warning: the sample rate of the output ({}) and input ({}) devices do not correspond.".format(
+                      default_output_device['default_samplerate'], self.rate),
+                  colorama.Style.RESET_ALL)
 
-        self.frames_per_buffer = frames_per_buffer
+        self.subtype = None
 
         self.q = queue.Queue()
         self.t = None
@@ -65,15 +86,14 @@ class Recorder(object):
         # Version
         print(sd.get_portaudio_version())
 
-        # Default devices
-        # print(self._pa.get_default_output_device_info())
-        # print(self._pa.get_default_input_device_info())
-
         print("Recording file")
         print(self.fname)
+        print()
 
         print("All devices")
-        print(sd.query_devices())
+        raw_devices = sd.query_devices()
+        print(raw_devices)
+        print()
 
         print("Device that will be used:")
         print("Device #: {}".format(self.device))
@@ -108,3 +128,7 @@ class Recorder(object):
     def stop_recording(self):
         self.t.do_run = False
         self.t.join()
+
+
+a = Recorder()
+a.getinfo()
