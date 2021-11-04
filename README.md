@@ -14,7 +14,11 @@
 ### Spotify
 Better if with a paid account to get rid of ads.
 
-###[Blackhole](https://existential.audio/blackhole/)
+### Blackhole
+[Download](https://existential.audio/blackhole/)
+
+[Github](https://github.com/ExistentialAudio/BlackHole/wiki)
+
 To route the audio stream internally.
 If you also want to listen to the music while recording you will need to create an aggregate output device (red circle). In this case it's important to set the BlackHole virtual device bitrate to the same bitrate of the speakers (48kHz) otherwise this nasty error appears at random `||PaMacCore (AUHAL)|| Error on line 2500: err='-10863', msg=Audio Unit: cannot do in current context`.
 
