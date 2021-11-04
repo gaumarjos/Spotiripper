@@ -9,8 +9,8 @@ https://betterprogramming.pub/simple-audio-processing-in-python-with-pydub-c3a21
 
 import subprocess, sys, os, time, shutil, eyed3
 from urllib.request import urlopen
-from recorder_pyaudio import Recorder
-# from recorder_sounddevice import Recorder
+# from recorder_pyaudio import Recorder
+from recorder_sounddevice import Recorder
 from converter_pydub import convert_to_mp3
 # from converter_ffmpeg import convert_to_mp3
 import spotipy
@@ -18,6 +18,7 @@ from spotipy.oauth2 import SpotifyClientCredentials
 import colorama
 
 verbose = False
+max_line_w = 110
 
 
 def convert_to_uri(s):
@@ -65,6 +66,8 @@ class Ripper:
 
         # Start recorder
         self.recfile = Recorder(self.tmp_storage_location + self.tmp_wav_file_name)
+        self.recfile.getinfo()
+
         self.recfile.start_recording()
         if verbose:
             print("Recording started.")
@@ -94,7 +97,7 @@ class Ripper:
         toprint = "{}, {}".format(artist, track)
         try:
             print(colorama.Back.LIGHTGREEN_EX,
-                  toprint + (110 - len(toprint)) * ' ',
+                  toprint + (max_line_w - len(toprint)) * ' ',
                   colorama.Style.RESET_ALL)
         except:
             print(colorama.Back.LIGHTGREEN_EX,
@@ -241,7 +244,8 @@ def main():
         for track in tracks[:]:
             ripper = Ripper()
             track = convert_to_uri(track.rstrip())
-            print("Ripping track {}...".format(track))
+            toprint = "Ripping track {}...".format(track)
+            print(toprint + (max_line_w - len(toprint)) * ' ')
             ripper.rip(track)
 
 
