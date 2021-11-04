@@ -17,6 +17,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import colorama
 
+version = "2021-11-04"
 verbose = False
 max_line_w = 114
 
@@ -166,6 +167,7 @@ def main():
 
     # Understand what the command line input is
     if len(sys.argv[1]) < 4:
+        print("Version: {}".format(version))
         print("Usage:")
         print("    spotiripper <track URI>")
         print("    spotiripper <track URL>")
