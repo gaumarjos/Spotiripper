@@ -141,8 +141,8 @@ class Recorder(object):
 
         # The following 3 lines seems to be unnecessary. I put them there to be extra sure nothing is left open.
         self._stream.close()
-        self._pa.terminate()
         self.wavefile.close()
+        self._pa.terminate()
         return self
 
     def get_callback(self):
