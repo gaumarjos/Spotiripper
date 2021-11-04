@@ -25,7 +25,7 @@ assert numpy  # avoid "imported but unused" message (W0611)
 
 
 class Recorder(object):
-    def __init__(self, fname=None):
+    def __init__(self, fname=None, terminal_width=80):
 
         if fname is None:
             self.fname = tempfile.mktemp(prefix='sounddevice_', suffix='.wav', dir='')
@@ -73,10 +73,11 @@ class Recorder(object):
         self.q = queue.Queue()
         self.t = None
 
-        self.bar = SoundBar(limitx=1.0)
+        self.terminal_width = terminal_width
+        self.bar = SoundBar(limitx=1.0, terminal_width=self.terminal_width)
 
     def getinfo(self):
-        print(80 * '*')
+        print(self.terminal_width * '*')
         print("Portaudio version")
         print(sd.get_portaudio_version())
         print()
@@ -94,7 +95,7 @@ class Recorder(object):
         print("Device #: {}".format(self.device))
         print("Channels: {}".format(self.channels))
         print("Rate #: {}".format(self.rate))
-        print(80 * '*')
+        print(self.terminal_width * '*')
 
     def _callback(self, indata, frames, time, status):
         """This is called (from a separate thread) for each audio block."""

@@ -19,7 +19,6 @@ import colorama
 
 version = "2021-11-04"
 verbose = False
-max_line_w = 114
 
 
 def convert_to_uri(s):
@@ -54,7 +53,12 @@ class Ripper:
         if not os.path.exists(self.rip_storage_location):
             os.makedirs(self.rip_storage_location)
 
+        # Determine width of terminal window to fit soundbar
+        self.terminal_width = shutil.get_terminal_size((80, 20)).columns
+
     def rip(self, track):
+        toprint = "Ripping track {}...".format(track)
+        print(toprint + (self.terminal_width - len(toprint)) * ' ')
 
         # Clear all previous recordings if they exist
         for f in os.listdir(self.tmp_storage_location):
@@ -66,8 +70,8 @@ class Ripper:
         time.sleep(.300)
 
         # Start recorder
-        self.recfile = Recorder(self.tmp_storage_location + self.tmp_wav_file_name)
-        self.recfile.getinfo()
+        self.recfile = Recorder(self.tmp_storage_location + self.tmp_wav_file_name, terminal_width=self.terminal_width)
+        # self.recfile.getinfo()
 
         self.recfile.start_recording()
         if verbose:
@@ -98,11 +102,12 @@ class Ripper:
         toprint = "{}, {}".format(artist, track)
         try:
             print(colorama.Back.LIGHTGREEN_EX,
-                  toprint + (max_line_w - len(toprint)) * ' ',
+                  toprint + (self.terminal_width - len(toprint) - 6) * ' ',
                   colorama.Style.RESET_ALL)
         except:
+            toprint = toprint.encode('ascii', 'replace')
             print(colorama.Back.LIGHTGREEN_EX,
-                  "{}, {}".format(artist, track).encode('ascii', 'replace'),
+                  toprint + (self.terminal_width - len(toprint) - 6) * ' ',
                   colorama.Style.RESET_ALL)
             print(colorama.Fore.LIGHTYELLOW_EX,
                   "The song name contains accented characters that cannot be displayed correctly. Make sure you set \"export PYTHONIOENCODING=utf-8\".",
@@ -246,8 +251,6 @@ def main():
         for track in tracks[:]:
             ripper = Ripper()
             track = convert_to_uri(track.rstrip())
-            toprint = "Ripping track {}...".format(track)
-            print(toprint + (max_line_w - len(toprint)) * ' ')
             ripper.rip(track)
 
 

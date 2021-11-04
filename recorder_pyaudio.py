@@ -29,7 +29,7 @@ import numpy
 
 
 class Recorder(object):
-    def __init__(self, fname=None):
+    def __init__(self, fname=None, terminal_width=80):
 
         if fname is None:
             self.fname = tempfile.mktemp(prefix='pyaudio_', suffix='.wav', dir='')
@@ -74,7 +74,8 @@ class Recorder(object):
         self.wavefile = self._prepare_file(self.fname, self.mode)
         self._stream = None
 
-        self.bar = SoundBar(limitx=1.0)
+        self.terminal_width = terminal_width
+        self.bar = SoundBar(limitx=1.0, terminal_width=self.terminal_width)
 
     def __enter__(self):
         return self
@@ -83,7 +84,7 @@ class Recorder(object):
         self.close()
 
     def getinfo(self):
-        print(80 * '*')
+        print(self.terminal_width * '*')
         print("Portaudio version")
         print(pyaudio.get_portaudio_version())
         print()
@@ -111,7 +112,7 @@ class Recorder(object):
         print("Device that will be used:")
         print("Channels: {}".format(self.channels))
         print("Rate #: {}".format(self.rate))
-        print(80 * '*')
+        print(self.terminal_width * '*')
 
     def record(self, duration):
         # Use a stream with no callback function in blocking mode
@@ -159,7 +160,6 @@ class Recorder(object):
         wavefile.setsampwidth(self._pa.get_sample_size(pyaudio.paInt16))
         wavefile.setframerate(self.rate)
         return wavefile
-
 
 # a = Recorder()
 # a.getinfo()

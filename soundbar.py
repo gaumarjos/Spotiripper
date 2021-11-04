@@ -1,15 +1,13 @@
-import shutil
 import numpy
 
 
 class SoundBar(object):
-    def __init__(self, limitx, graceperiod=20):
-        # self.w = shutil.get_terminal_size((80, 20)).columns - 10
-        self.w = 100
+    def __init__(self, limitx, graceperiod=20, terminal_width=80):
         self.limitx = limitx
         self.maxx = 0.0
         self.i = 0
         self.graceperiod = graceperiod
+        self.w = terminal_width - 20
 
     def update(self, x):
         self.i = self.i + 1
