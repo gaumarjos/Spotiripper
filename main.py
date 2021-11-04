@@ -18,7 +18,7 @@ from spotipy.oauth2 import SpotifyClientCredentials
 import colorama
 
 verbose = False
-max_line_w = 110
+max_line_w = 114
 
 
 def convert_to_uri(s):

@@ -24,7 +24,7 @@ import tempfile
 import colorama
 import pyaudio
 import wave
-from bar import SoundBar
+from soundbar import SoundBar
 import numpy
 
 
@@ -74,7 +74,7 @@ class Recorder(object):
         self.wavefile = self._prepare_file(self.fname, self.mode)
         self._stream = None
 
-        self.bar = SoundBar(maxvalue=1.0)
+        self.bar = SoundBar(limitx=1.0)
 
     def __enter__(self):
         return self

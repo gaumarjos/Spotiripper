@@ -19,7 +19,7 @@ import soundfile as sf
 import threading
 import colorama
 import numpy  # Make sure NumPy is loaded before it is used in the callback
-from bar import SoundBar
+from soundbar import SoundBar
 
 assert numpy  # avoid "imported but unused" message (W0611)
 
@@ -73,7 +73,7 @@ class Recorder(object):
         self.q = queue.Queue()
         self.t = None
 
-        self.bar = SoundBar(maxvalue=1.0)
+        self.bar = SoundBar(limitx=1.0)
 
     def getinfo(self):
         print(80 * '*')
