@@ -3,7 +3,6 @@
 spotiripper.spec
 set_spotify_keys.sh
 build/
-dist/
 tmp/
 .DS_Store
 __pycache__/

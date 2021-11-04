@@ -1,5 +1,8 @@
 # Spotiripper
 
+## Download
+[Built on MacOS 12.0.1.](dist/spotiripper)
+
 ## Usage
 
     spotiripper <track URI>
@@ -12,6 +15,7 @@
 
 ## Python settings
 Developed and tested with Python 3.9.7.
+Built with pyinstaller.
 
 ## Non-Python Dependencies
 ### Spotify
