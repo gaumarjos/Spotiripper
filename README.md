@@ -13,6 +13,12 @@
     spotiripper <album URI>       Note: requires setting Spotify Client ID and Client Secret keys.
     spotiripper <album URL>       Note: requires setting Spotify Client ID and Client Secret keys.
 
+If you get an error like `UnicodeEncodeError: 'ascii' codec can't encode characters in position 1-57: ordinal not in range(128)`, set the LANG variable in the terminal with:
+
+````
+export LANG="en_US.UTF-8"
+````
+
 ## Python settings
 Developed and tested with Python 3.9.7.
 Built with pyinstaller.
