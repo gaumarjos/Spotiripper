@@ -10,6 +10,9 @@
     spotiripper <album URI>       Note: requires setting Spotify Client ID and Client Secret keys.
     spotiripper <album URL>       Note: requires setting Spotify Client ID and Client Secret keys.
 
+## Python settings
+Developed and tested with Python 3.9.7.
+
 ## Non-Python Dependencies
 ### Spotify
 Better if with a paid account to get rid of ads.
