@@ -1,7 +1,7 @@
 # Spotiripper
 
 ## Download
-[Built on MacOS 12.0.1.](dist/spotiripper)
+[Latest build](dist/spotiripper), developed with Python 3.9.7 and built on MacOS 12.0.1.
 
 ## Usage
 
@@ -20,20 +20,30 @@ export LANG="en_US.UTF-8"
 ````
 
 ## Python settings
-Developed and tested with Python 3.9.7.
+Developed and tested with 
 Built with pyinstaller.
 
-## Non-Python Dependencies
+## External dependencies
 ### Spotify
-Better if with a paid account to get rid of ads.
+It'e better to use a paid account to get rid of ads that otherwise might be recorded.
+
+To download tracks (or a list or tracks) nothing more is necessary.
+
+To download playlists and albums `spotiripper` needs to access the Spotify database to know what tracks are in them.
+To do so, it's necessary to setup Client ID and Client Secret keys.
+Once these are obtained from [here](https://developer.spotify.com/dashboard/applications), two environment variables have to be set:
+
+````
+export SPOTIPY_CLIENT_ID='yourclientid'
+export SPOTIPY_CLIENT_SECRET='yourclientsecret'
+````
 
 ### Blackhole
-[Download](https://existential.audio/blackhole/)
 
-[Github](https://github.com/ExistentialAudio/BlackHole/wiki)
+It's necessary to route the audio stream internally and allow `spotiripper` to record internally.
+It can be downloaded from [here](https://existential.audio/blackhole/) ([here](https://github.com/ExistentialAudio/BlackHole/wiki) is the github for more documentation).
 
-To route the audio stream internally.
-If you also want to listen to the music while recording you will need to create an aggregate output device (red circle). In this case it's important to set the BlackHole virtual device bitrate to the same bitrate of the speakers (48kHz) otherwise this nasty error appears at random `||PaMacCore (AUHAL)|| Error on line 2500: err='-10863', msg=Audio Unit: cannot do in current context`.
+If you also want to listen to the music while recording you will need to create an aggregate output device (red circle). In this case it's important to set the BlackHole virtual device bitrate to the same bitrate of the speakers (48kHz) otherwise this nasty error appears at random: `||PaMacCore (AUHAL)|| Error on line 2500: err='-10863', msg=Audio Unit: cannot do in current context`.
 
 ![alt text1](docs/audio_input.png "Input")
 ![alt text1](docs/audio_output.png "Output")
@@ -42,6 +52,8 @@ Make sure the volume slider in BlackHole is set to 1.0 (0.0dB) not to have an at
 
 ## Bugs
 Both pyaudio and sounddevice, sometimes, although the input device is set correctly to blackhole, pstart recording from the microphone and then crash when attempting to close the stream.
+
+Seems to have disappeared with the latest version of BlackHole.
 
 ````
 Ripping track spotify:track:56wHTRjWMtWZ8RBKN1gcnj...                                                         
