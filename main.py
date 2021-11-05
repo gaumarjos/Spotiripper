@@ -17,7 +17,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import colorama
 
-version = "2021-11-04"
+version = "2021-11-05"
 verbose = False
 
 
@@ -38,20 +38,21 @@ def convert_to_uri(s):
 class Ripper:
     def __init__(self,
                  ripped_folder_structure='flat',
-                 rip_storage_location=os.path.expanduser('~') + '/Downloads/Ripped/'):
+                 rip_dir=os.path.expanduser('~') + '/Downloads/Ripped/'):
         self.ripped_folder_structure = ripped_folder_structure
-        self.rip_storage_location = rip_storage_location
+        self.rip_dir = rip_dir
+        self.tmp_dir = self.rip_dir + '.tmp/'
+        self.tmp_wav = "tmp.wav"
+        self.tmp_mp3 = "tmp.mp3"
+        self.recfile = None
         # self.converter = "ffmpeg"
         self.converter = "pydub"
-        self.tmp_storage_location = 'tmp/'
-        self.tmp_m4a_file_name = "tmp.m4a"
-        self.tmp_mp3_file_name = "tmp.mp3"
-        self.tmp_wav_file_name = "tmp.wav"
-        self.recfile = None
 
         # Create directory for the ripped tracks
-        if not os.path.exists(self.rip_storage_location):
-            os.makedirs(self.rip_storage_location)
+        if not os.path.exists(self.rip_dir):
+            os.makedirs(self.rip_dir)
+        if not os.path.exists(self.tmp_dir):
+            os.makedirs(self.tmp_dir)
 
         # Determine width of terminal window to fit soundbar
         self.terminal_width = shutil.get_terminal_size((80, 20)).columns
@@ -61,8 +62,8 @@ class Ripper:
         print(toprint + (self.terminal_width - len(toprint)) * ' ')
 
         # Clear all previous recordings if they exist
-        for f in os.listdir(self.tmp_storage_location):
-            os.remove(os.path.join(self.tmp_storage_location, f))
+        for f in os.listdir(self.tmp_dir):
+            os.remove(os.path.join(self.tmp_dir, f))
 
         # Tell Spotify to pause
         subprocess.Popen('osascript -e "tell application \\"Spotify\\" to pause"', shell=True,
@@ -70,7 +71,7 @@ class Ripper:
         time.sleep(.300)
 
         # Start recorder
-        self.recfile = Recorder(self.tmp_storage_location + self.tmp_wav_file_name, terminal_width=self.terminal_width)
+        self.recfile = Recorder(self.tmp_dir + self.tmp_wav, terminal_width=self.terminal_width)
         # self.recfile.getinfo()
 
         self.recfile.start_recording()
@@ -125,8 +126,8 @@ class Ripper:
             print("Recording stopped.")
             print("Converting to mp3...")
 
-        if convert_to_mp3(self.tmp_storage_location + self.tmp_wav_file_name,
-                          self.tmp_storage_location + self.tmp_mp3_file_name):
+        if convert_to_mp3(self.tmp_dir + self.tmp_wav,
+                          self.tmp_dir + self.tmp_mp3):
             if verbose:
                 print("Converted.")
         else:
@@ -135,7 +136,7 @@ class Ripper:
         time.sleep(.500)
 
         # Set and/or update ID3 information
-        mp3file = eyed3.load(self.tmp_storage_location + self.tmp_mp3_file_name)
+        mp3file = eyed3.load(self.tmp_dir + self.tmp_mp3)
         mp3file.tag.images.set(3, artworkdata, "image/jpeg", track)
         mp3file.tag.artist = artist
         mp3file.tag.album = album
@@ -144,25 +145,25 @@ class Ripper:
 
         # Move to final location
         if self.ripped_folder_structure == "flat":
-            for f in os.listdir(self.tmp_storage_location):
+            for f in os.listdir(self.tmp_dir):
                 if f.endswith(".mp3"):
-                    shutil.move(self.tmp_storage_location + f,
-                                self.rip_storage_location + artist + ", " + album + ", " + track + ".mp3")
+                    shutil.move(self.tmp_dir + f,
+                                self.rip_dir + artist + ", " + album + ", " + track + ".mp3")
 
         elif self.ripped_folder_structure == "tree":
             # Create directory for the artist
-            if not os.path.exists(self.rip_storage_location + artist):
-                os.makedirs(self.rip_storage_location + artist)
+            if not os.path.exists(self.rip_dir + artist):
+                os.makedirs(self.rip_dir + artist)
 
             # Create directory for the album
-            if not os.path.exists(self.rip_storage_location + artist + "/" + album):
-                os.makedirs(self.rip_storage_location + artist + "/" + album)
+            if not os.path.exists(self.rip_dir + artist + "/" + album):
+                os.makedirs(self.rip_dir + artist + "/" + album)
 
             # Move MP3 file to the folder containing rips.
-            for f in os.listdir(self.tmp_storage_location):
+            for f in os.listdir(self.tmp_dir):
                 if f.endswith(".mp3"):
-                    shutil.move(self.tmp_storage_location + f,
-                                self.rip_storage_location + artist + "/" + album + "/" + track + ".mp3")
+                    shutil.move(self.tmp_dir + f,
+                                self.rip_dir + artist + "/" + album + "/" + track + ".mp3")
 
 
 def main():
