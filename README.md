@@ -5,13 +5,19 @@
 
 ## Usage
 
-    spotiripper <track URI>
+    spotiripper <track URI>")
     spotiripper <track URL>")
     spotiripper <list.txt containing track URIs or URLs>
-    spotiripper <playlist URI>    Note: requires setting Spotify Client ID and Client Secret keys.
-    spotiripper <playlist URL>    Note: requires setting Spotify Client ID and Client Secret keys.
-    spotiripper <album URI>       Note: requires setting Spotify Client ID and Client Secret keys.
-    spotiripper <album URL>       Note: requires setting Spotify Client ID and Client Secret keys.
+    spotiripper <playlist URI>    (*)
+    spotiripper <playlist URL>    (*)
+    spotiripper <album URI>       (*)
+    spotiripper <album URL>       (*)
+    spotiripper <artist URI>      Downloads the artist's top 10 tracks. (*)
+    spotiripper <artist URL>      Downloads the artist's top 10 tracks. (*)
+
+    (*) Note: requires setting Spotify Client ID and Client Secret keys.")
+        export SPOTIPY_CLIENT_ID='yourclientid'")
+        export SPOTIPY_CLIENT_SECRET='yourclientsecret'")
 
 If you get an error like `UnicodeEncodeError: 'ascii' codec can't encode characters in position 1-57: ordinal not in range(128)`, set the LANG variable in the terminal with:
 
@@ -19,19 +25,15 @@ If you get an error like `UnicodeEncodeError: 'ascii' codec can't encode charact
 export LANG="en_US.UTF-8"
 ````
 
-## Python settings
-Developed and tested with 
-Built with pyinstaller.
-
 ## External dependencies
 ### Spotify
-It'e better to use a paid account to get rid of ads that otherwise might be recorded.
+It is better to use a paid account to get rid of ads that otherwise might be recorded.
 
 To download tracks (or a list or tracks) nothing more is necessary.
 
-To download playlists and albums `spotiripper` needs to access the Spotify database to know what tracks are in them.
-To do so, it's necessary to setup Client ID and Client Secret keys.
-Once these are obtained from [here](https://developer.spotify.com/dashboard/applications), two environment variables have to be set:
+To download playlists, albums and artist's top tracks `spotiripper` needs to access the Spotify database to know what tracks they contain.
+To do so, it is necessary to setup Client ID and Client Secret keys.
+They can be obtained from [here](https://developer.spotify.com/dashboard/applications) and the keys can be set with:
 
 ````
 export SPOTIPY_CLIENT_ID='yourclientid'
@@ -40,15 +42,15 @@ export SPOTIPY_CLIENT_SECRET='yourclientsecret'
 
 ### Blackhole
 
-It's necessary to route the audio stream internally and allow `spotiripper` to record internally.
+It is necessary to route the audio stream internally and allow `spotiripper` to record internally.
 It can be downloaded from [here](https://existential.audio/blackhole/) ([here](https://github.com/ExistentialAudio/BlackHole/wiki) is the github for more documentation).
 
-If you also want to listen to the music while recording you will need to create an aggregate output device (red circle). In this case it's important to set the BlackHole virtual device bitrate to the same bitrate of the speakers (48kHz) otherwise this nasty error appears at random: `||PaMacCore (AUHAL)|| Error on line 2500: err='-10863', msg=Audio Unit: cannot do in current context`.
+If you also want to listen to the music while recording you will need to create an aggregate output device (red circle). In this case it is important to set the BlackHole virtual device bitrate to the same bitrate of the speakers (48kHz) otherwise this nasty error appears at random: `||PaMacCore (AUHAL)|| Error on line 2500: err='-10863', msg=Audio Unit: cannot do in current context`.
 
 ![alt text1](docs/audio_input.png "Input")
 ![alt text1](docs/audio_output.png "Output")
 
-Make sure the volume slider in BlackHole is set to 1.0 (0.0dB) not to have an attenuated recording. If this is necessary for whatever reason, it's still possible to recover that in spotiripper (`gaindb` parameter in `converter_pydub.py`).
+Make sure the volume slider in BlackHole is set to 1.0 (0.0dB) not to have an attenuated recording.
 
 ## Bugs
 Both pyaudio and sounddevice, sometimes, although the input device is set correctly to blackhole, pstart recording from the microphone and then crash when attempting to close the stream.
