@@ -199,17 +199,18 @@ def main():
             help()
         else:
             # A track URI or URL?
-            if sys.argv[1][:14] == "spotify:track:" or sys.argv[1][:31] == "https://open.spotify.com/track/":
+            if sys.argv[1].startswith("spotify:track:") or sys.argv[1].startswith("https://open.spotify.com/track/"):
                 tracks = [sys.argv[1]]
 
             # A txt list with track URIs or URLs?
-            elif sys.argv[1][-4:] == ".txt":
+            elif sys.argv[1].endswith(".txt"):
                 file = open(sys.argv[1])
                 tracks = file.readlines()
                 file.close()
 
             # A playlist URI or URL?
-            elif sys.argv[1][:17] == "spotify:playlist:" or sys.argv[1][:34] == "https://open.spotify.com/playlist/":
+            elif sys.argv[1].startswith("spotify:playlist:") or sys.argv[1].startswith(
+                    "https://open.spotify.com/playlist/"):
                 if os.environ.get("SPOTIPY_CLIENT_ID") is not None and os.environ.get(
                         "SPOTIPY_CLIENT_SECRET") is not None:
                     # Authenticating into spotify
@@ -234,7 +235,7 @@ def main():
                     tracks = []
 
             # An album URI or URL?
-            elif sys.argv[1][:14] == "spotify:album:" or sys.argv[1][:31] == "https://open.spotify.com/album/":
+            elif sys.argv[1].startswith("spotify:album:") or sys.argv[1].startswith("https://open.spotify.com/album/"):
                 if os.environ.get("SPOTIPY_CLIENT_ID") is not None and os.environ.get(
                         "SPOTIPY_CLIENT_SECRET") is not None:
                     # Authenticating into spotify
@@ -260,7 +261,8 @@ def main():
 
             # An artist URI or URL?
             # https://open.spotify.com/artist/5Pqc0ZFA20Y9zGJZ3ojUin?si=M5y9h5sxTgSnhSf9ZjLcbQ
-            elif sys.argv[1][:15] == "spotify:artist:" or sys.argv[1][:32] == "https://open.spotify.com/artist/":
+            elif sys.argv[1].startswith("spotify:artist:") or sys.argv[1].startswith(
+                    "https://open.spotify.com/artist/"):
                 if os.environ.get("SPOTIPY_CLIENT_ID") is not None and os.environ.get(
                         "SPOTIPY_CLIENT_SECRET") is not None:
                     # Authenticating into spotify
