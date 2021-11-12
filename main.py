@@ -17,7 +17,9 @@ import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import colorama
 
-version = "2021-11-06"
+# from plyer import notification
+
+version = "2021-11-12"
 verbose = False
 dryrun = False
 
@@ -39,6 +41,20 @@ def help():
     print("    export SPOTIPY_CLIENT_ID='yourclientid'")
     print("    export SPOTIPY_CLIENT_SECRET='yourclientsecret'")
     return 1
+
+
+def push(title, message):
+    if True:
+        subprocess.Popen(
+            'osascript -e "display notification \\"' + message + '\\" with title \\"' + title + '\\""',
+            shell=True, stdout=subprocess.PIPE).stdout.read()
+    if False:
+        notification.notify(
+            title=title,
+            message=message,
+            app_icon="spotiripper.png",
+            timeout=50
+        )
 
 
 def convert_to_uri(s):
@@ -125,6 +141,7 @@ class Ripper:
             print(colorama.Back.LIGHTGREEN_EX,
                   toprint + (self.terminal_width - len(toprint) - 6) * ' ',
                   colorama.Style.RESET_ALL)
+            push("Now recording...", toprint)
         except:
             toprint = toprint.encode('ascii', 'replace')
             print(colorama.Back.LIGHTGREEN_EX,
@@ -148,6 +165,7 @@ class Ripper:
 
         if convert_to_mp3(self.tmp_dir + self.tmp_wav,
                           self.tmp_dir + self.tmp_mp3):
+            push("Finished", toprint)
             if verbose:
                 print("Converted.")
         else:

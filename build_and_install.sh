@@ -13,9 +13,12 @@ pyinstaller --noconfirm --log-level=ERROR \
     --onefile \
     --nowindowed \
     --name spotiripper \
+    --icon spotiripper.png \
     --paths ~/.pyenv/versions/spotiripper/ \
     --paths ~/.pyenv/versions/3.9.7/envs/spotiripper/lib/python3.9/site-packages/ \
     main.py
+
+# --hidden-import plyer.platforms.macosx.notification \
 
 # Install
 cp dist/spotiripper /usr/local/bin
