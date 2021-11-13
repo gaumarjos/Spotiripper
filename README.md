@@ -1,6 +1,7 @@
 # Spotiripper
 
 ## Download
+
 [Latest build](dist/spotiripper), developed with Python 3.9.7 and built on MacOS 12.0.1.
 
 ## Usage
@@ -19,21 +20,28 @@
         export SPOTIPY_CLIENT_ID='yourclientid'")
         export SPOTIPY_CLIENT_SECRET='yourclientsecret'")
 
-If you get an error like `UnicodeEncodeError: 'ascii' codec can't encode characters in position 1-57: ordinal not in range(128)`, set the LANG variable in the terminal with:
+To avoid getting errors, add these lines to `~/.zshrc`, with `nano ~/.zshrc` for example:
 
 ````
 export LANG="en_US.UTF-8"
+export SPOTIPY_CLIENT_ID='yourclientid'
+export SPOTIPY_CLIENT_SECRET='yourclientsecret'
 ````
 
+The first line makes sure you do not get the `UnicodeEncodeError` because the terminal cannot display some accented
+character or the sound bar. The other two are described below in "External dependencies"
+
 ## External dependencies
+
 ### Spotify
+
 It is better to use a paid account to get rid of ads that otherwise might be recorded.
 
 To download tracks (or a list or tracks) nothing more is necessary.
 
-To download playlists, albums and artist's top tracks `spotiripper` needs to access the Spotify database to know what tracks they contain.
-To do so, it is necessary to setup Client ID and Client Secret keys.
-They can be obtained from [here](https://developer.spotify.com/dashboard/applications) and the keys can be set with:
+To download playlists, albums and artist's top tracks `spotiripper` needs to access the Spotify database to know what
+tracks they contain. To do so, it is necessary to setup Client ID and Client Secret keys. They can be obtained
+from [here](https://developer.spotify.com/dashboard/applications) and the keys can be set with:
 
 ````
 export SPOTIPY_CLIENT_ID='yourclientid'
@@ -42,10 +50,14 @@ export SPOTIPY_CLIENT_SECRET='yourclientsecret'
 
 ### Blackhole
 
-It is necessary to route the audio stream internally and allow `spotiripper` to record internally.
-It can be downloaded from [here](https://existential.audio/blackhole/) ([here](https://github.com/ExistentialAudio/BlackHole/wiki) is the github for more documentation).
+It is necessary to route the audio stream internally and allow `spotiripper` to record internally. It can be downloaded
+from [here](https://existential.audio/blackhole/) ([here](https://github.com/ExistentialAudio/BlackHole/wiki) is the
+github for more documentation).
 
-If you also want to listen to the music while recording you will need to create an aggregate output device (red circle). In this case it is important to set the BlackHole virtual device bitrate to the same bitrate of the speakers (48kHz) otherwise this nasty error appears at random: `||PaMacCore (AUHAL)|| Error on line 2500: err='-10863', msg=Audio Unit: cannot do in current context`.
+If you also want to listen to the music while recording you will need to create an aggregate output device (red circle).
+In this case it is important to set the BlackHole virtual device bitrate to the same bitrate of the speakers (48kHz)
+otherwise this nasty error appears at
+random: `||PaMacCore (AUHAL)|| Error on line 2500: err='-10863', msg=Audio Unit: cannot do in current context`.
 
 ![alt text1](docs/audio_input.png "Input")
 ![alt text1](docs/audio_output.png "Output")
@@ -53,7 +65,9 @@ If you also want to listen to the music while recording you will need to create 
 Make sure the volume slider in BlackHole is set to 1.0 (0.0dB) not to have an attenuated recording.
 
 ## Bugs
-Both pyaudio and sounddevice, sometimes, although the input device is set correctly to blackhole, pstart recording from the microphone and then crash when attempting to close the stream.
+
+Both pyaudio and sounddevice, sometimes, although the input device is set correctly to blackhole, pstart recording from
+the microphone and then crash when attempting to close the stream.
 
 Seems to have disappeared with the latest version of BlackHole.
 
