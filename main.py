@@ -19,7 +19,7 @@ import colorama
 
 # from plyer import notification
 
-version = "2021-11-12"
+version = "2021-11-29"
 verbose = False
 dryrun = False
 
@@ -69,6 +69,13 @@ def convert_to_uri(s):
         return "spotify:playlist:" + s[34:56]
     else:
         return -1
+
+
+def remove_bad_characters(s):
+    bad_chars = [';', ':', '!', '*', '/', '\\']
+    for i in bad_chars:
+        s = s.replace(i, '')
+    return s
 
 
 class Ripper:
@@ -180,13 +187,16 @@ class Ripper:
         mp3file.tag.album = album
         mp3file.tag.title = track
         mp3file.tag.save()
+        destination_filename = self.rip_dir + remove_bad_characters(artist) + ", " + remove_bad_characters(
+            album) + ", " + remove_bad_characters(track) + ".mp3"
+        print(destination_filename)
 
         # Move to final location
         if self.ripped_folder_structure == "flat":
             for f in os.listdir(self.tmp_dir):
                 if f.endswith(".mp3"):
                     shutil.move(self.tmp_dir + f,
-                                self.rip_dir + artist + ", " + album + ", " + track + ".mp3")
+                                destination_filename)
 
         elif self.ripped_folder_structure == "tree":
             # Create directory for the artist
