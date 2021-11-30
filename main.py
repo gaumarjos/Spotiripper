@@ -316,8 +316,12 @@ def main():
                 tracks = []
 
             # Rip
-            print("Ripping {} tracks.".format(len(tracks)))
-            for track in tracks[:]:
+            try:
+                start_from = int(sys.argv[2]) - 1
+            except:
+                start_from = 0
+            print("Ripping {} tracks.".format(len(tracks[start_from:])))
+            for track in tracks[start_from:]:
                 if not dryrun:
                     ripper = Ripper()
                     track = convert_to_uri(track.rstrip())
