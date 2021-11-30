@@ -25,7 +25,7 @@ assert numpy  # avoid "imported but unused" message (W0611)
 
 
 class Recorder(object):
-    def __init__(self, fname=None, terminal_width=80):
+    def __init__(self, fname=None, terminal_width=80, gui_soundbar=None):
 
         if fname is None:
             self.fname = tempfile.mktemp(prefix='sounddevice_', suffix='.wav', dir='')
@@ -74,7 +74,8 @@ class Recorder(object):
         self.t = None
 
         self.terminal_width = terminal_width
-        self.bar = SoundBar(limitx=1.0, terminal_width=self.terminal_width)
+        self.gui_soundbar = gui_soundbar
+        self.bar = SoundBar(limitx=1.0, terminal_width=self.terminal_width, gui_soundbar=self.gui_soundbar)
 
     def getinfo(self):
         print(self.terminal_width * '*')
@@ -127,7 +128,6 @@ class Recorder(object):
     def stop_recording(self):
         self.t.do_run = False
         self.t.join()
-
 
 # a = Recorder()
 # a.getinfo()
