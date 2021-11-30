@@ -30,5 +30,5 @@ class SoundBar(object):
                       '|' + (self.w - maxxbar - 1) * ' ' + \
                       '| {:6.2f} {:6.2f}'.format(x, self.maxx), end='\r')
             else:
-                # In range 0-1
-                self.gui_soundbar.setValue(x / self.limitx)
+                # In range 0-100
+                self.gui_soundbar.setValue(x / self.limitx * 100.0)
