@@ -14,12 +14,13 @@ import subprocess
 import sys
 import time
 import traceback
+import json
 from urllib.request import urlopen
 import colorama
 # from converter_ffmpeg import convert_to_mp3
 import spotipy
 from PySide6.QtCore import Qt, QSize, QRunnable, Slot, Signal, QObject, QThreadPool
-from PySide6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont
+from PySide6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QIcon
 from PySide6.QtWidgets import QApplication, QMainWindow, QTextEdit, QLineEdit, QPushButton, QSpinBox, QLabel, \
     QProgressBar
 from spotipy.oauth2 import SpotifyClientCredentials
@@ -31,7 +32,6 @@ from recorder_sounddevice import Recorder
 # from plyer import notification
 
 VERSION = "2021-12-01"
-GUI = True
 DRYRUN = False
 
 MACOSRED = (236, 95, 93)
@@ -211,8 +211,8 @@ def resource_path(path):
 
 class Ripper:
     def __init__(self,
-                 ripped_folder_structure='flat',
                  rip_dir=os.path.expanduser('~') + '/Downloads/Ripped/',
+                 ripped_folder_structure='flat',
                  gui=False,
                  gui_progress_callback=None,
                  gui_soundbar_callback=None):
@@ -368,6 +368,9 @@ def main():
     if not os.environ.get('PYTHONIOENCODING'):
         os.environ['PYTHONIOENCODING'] = str("utf-8")
 
+    # Load settings
+    settings = load_settings()
+
     # Understand what the command line input is
     tracks = []
     if len(sys.argv) < 2:
@@ -384,7 +387,8 @@ def main():
     print("Ripping {} tracks.".format(len(tracks)))
     for track in tracks:
         if not DRYRUN:
-            ripper = Ripper()
+            ripper = Ripper(rip_dir=settings["rip_dir"],
+                            ripped_folder_structure=settings["ripped_folder_structure"])
             ripper.rip(convert_to_uri(track.rstrip()))
         else:
             print(track)
@@ -514,7 +518,7 @@ def main_gui():
 
             self.setFixedSize(QSize(window_w, window_h))
             self.setWindowTitle("Spotiripper" + " " + VERSION)
-            # app.setWindowIcon(QIcon(resource_path('FotoPDF.png')))
+            app.setWindowIcon(QIcon(resource_path('spotiripper.png')))
 
             self.link_widget = QLineEdit(self)
             self.link_widget.setAlignment(Qt.AlignCenter)
@@ -582,8 +586,12 @@ def main_gui():
             progress_callback.emit("Ripping {} tracks.".format(len(tracks)))
 
             for track in tracks:
+                # Load settings (in theory, they could have been changed in the meanwhile)
+                settings = load_settings()
                 if not DRYRUN:
-                    ripper = Ripper(gui=True,
+                    ripper = Ripper(rip_dir=settings["rip_dir"],
+                                    ripped_folder_structure=settings["ripped_folder_structure"],
+                                    gui=True,
                                     gui_progress_callback=progress_callback,
                                     gui_soundbar_callback=soundbar_callback)
                     self.max_volume = 0.0
@@ -625,8 +633,27 @@ def main_gui():
     sys.exit(app.exec())
 
 
+def create_settings():
+    dict = {
+        "rip_dir": os.path.expanduser('~') + '/Downloads/Ripped/',
+        "ripped_folder_structure": "flat"
+    }
+    json_data = json.dumps(dict, indent=4)
+    with open("settings.json", "w") as outfile:
+        outfile.write(json_data)
+
+
+def load_settings():
+    with open("settings.json", "r") as j:
+        settings = json.load(j)
+    return settings
+
+
 if __name__ == "__main__":
-    if GUI:
+    if not os.path.exists("settings.json"):
+        create_settings()
+
+    if len(sys.argv) < 2:
         main_gui()
     else:
         main()
