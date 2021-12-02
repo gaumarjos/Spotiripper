@@ -15,7 +15,6 @@ import sys
 import time
 import traceback
 import settings_lib
-import json
 from urllib.request import urlopen
 import colorama
 # from converter_ffmpeg import convert_to_mp3
@@ -43,6 +42,10 @@ MACOSCYAN = (84, 153, 166)
 MACOSBLUE = (48, 123, 246)
 MACOSMAGENTA = (154, 86, 163)
 MACOSDARK = (46, 46, 46)
+
+'''
+Generic functions
+'''
 
 
 def help():
@@ -93,104 +96,108 @@ def convert_to_uri(s):
         return -1
 
 
+def verify_spotipy_client_credentials():
+    # First, check if credentials are stored somewhere
+    settings = settings_lib.load_settings()
+    spotipy_client_set = (settings["spotipy_client_id"] != "" and settings["spotipy_client_secret"] != "") or (
+            os.environ.get("SPOTIPY_CLIENT_ID") is not None and os.environ.get("SPOTIPY_CLIENT_SECRET") is not None)
+
+    if spotipy_client_set:
+        # Second, try to authenticate
+        # Try with those stored in settings first
+        try:
+            auth_manager = SpotifyClientCredentials(settings["spotipy_client_id"], settings["spotipy_client_secret"])
+            sp = spotipy.Spotify(auth_manager=auth_manager)
+            return sp
+        except:
+            # If they don't work, try with those in env variables
+            try:
+                auth_manager = SpotifyClientCredentials()
+                sp = spotipy.Spotify(auth_manager=auth_manager)
+                return sp
+            except:
+                return None
+    else:
+        return None
+
+
 def parse_input(link, start_from=0):
     tracks = []
+    error = None
 
-    if len(link) < 4:
-        help()
-    else:
-        # A track URI or URL?
-        if link.startswith("spotify:track:") or link.startswith("https://open.spotify.com/track/"):
-            tracks = [link]
+    # A track URI or URL?
+    if link.startswith("spotify:track:") or link.startswith("https://open.spotify.com/track/"):
+        tracks = [link]
 
-        # A txt list with track URIs or URLs?
-        elif link.endswith(".txt"):
-            file = open(link)
-            tracks = file.readlines()
-            file.close()
+    # A txt list with track URIs or URLs?
+    elif link.endswith(".txt"):
+        file = open(link)
+        tracks = file.readlines()
+        file.close()
 
-        # A playlist URI or URL?
-        elif link.startswith("spotify:playlist:") or link.startswith(
-                "https://open.spotify.com/playlist/"):
-            if os.environ.get("SPOTIPY_CLIENT_ID") is not None and os.environ.get(
-                    "SPOTIPY_CLIENT_SECRET") is not None:
-                # Authenticating into spotify
-                auth_manager = SpotifyClientCredentials()
-                sp = spotipy.Spotify(auth_manager=auth_manager)
-
-                # Fetching tracks in the playlist
-                results = sp.playlist_items(link)
-                items = results['items']
-                while results['next']:
-                    results = sp.next(results)
-                    items.extend(results['items'])
-                uris = []
-                for item in items:
-                    track = item['track']
-                    uris.append(track['uri'])
-                tracks = uris
-            else:
-                print(colorama.Fore.LIGHTRED_EX,
-                      "Error: fetching a playlist requires user authentication. Make sure Spotify Client ID and Client Secret are set.",
-                      colorama.Style.RESET_ALL)
-                tracks = []
-
-        # An album URI or URL?
-        elif link.startswith("spotify:album:") or link.startswith("https://open.spotify.com/album/"):
-            if os.environ.get("SPOTIPY_CLIENT_ID") is not None and os.environ.get(
-                    "SPOTIPY_CLIENT_SECRET") is not None:
-                # Authenticating into spotify
-                auth_manager = SpotifyClientCredentials()
-                sp = spotipy.Spotify(auth_manager=auth_manager)
-
-                # Fetching tracks in the album
-                results = sp.album_tracks(link)
-                items = results['items']
-                while results['next']:
-                    results = sp.next(results)
-                    items.extend(results['items'])
-                urls = []
-                for item in items:
-                    track = item['external_urls']
-                    urls.append(track['spotify'])
-                tracks = urls
-            else:
-                print(colorama.Fore.LIGHTRED_EX,
-                      "Error: fetching an album requires user authentication. Make sure Spotify Client ID and Client Secret are set.",
-                      colorama.Style.RESET_ALL)
-                tracks = []
-
-        # An artist URI or URL?
-        # https://open.spotify.com/artist/5Pqc0ZFA20Y9zGJZ3ojUin?si=M5y9h5sxTgSnhSf9ZjLcbQ
-        elif link.startswith("spotify:artist:") or link.startswith(
-                "https://open.spotify.com/artist/"):
-            if os.environ.get("SPOTIPY_CLIENT_ID") is not None and os.environ.get(
-                    "SPOTIPY_CLIENT_SECRET") is not None:
-                # Authenticating into spotify
-                auth_manager = SpotifyClientCredentials()
-                sp = spotipy.Spotify(auth_manager=auth_manager)
-
-                # Fetching this artist's top tracks
-                results = sp.artist_top_tracks(link)
-                items = results['tracks']
-                urls = []
-                for item in items:
-                    track = item['external_urls']
-                    urls.append(track['spotify'])
-                tracks = urls
-            else:
-                print(colorama.Fore.LIGHTRED_EX,
-                      "Error: fetching an album requires user authentication. Make sure Spotify Client ID and Client Secret are set.",
-                      colorama.Style.RESET_ALL)
-                tracks = []
-
+    # A playlist URI or URL?
+    elif link.startswith("spotify:playlist:") or link.startswith("https://open.spotify.com/playlist/"):
+        sp = verify_spotipy_client_credentials()
+        if sp is not None:
+            # Fetching tracks in the playlist
+            results = sp.playlist_items(link)
+            items = results['items']
+            while results['next']:
+                results = sp.next(results)
+                items.extend(results['items'])
+            uris = []
+            for item in items:
+                track = item['track']
+                uris.append(track['uri'])
+            tracks = uris
         else:
-            print("Unknown input")
+            tracks = []
+            error = 'spotipy_keys'
+
+    # An album URI or URL?
+    elif link.startswith("spotify:album:") or link.startswith("https://open.spotify.com/album/"):
+        sp = verify_spotipy_client_credentials()
+        if sp is not None:
+            # Fetching tracks in the album
+            results = sp.album_tracks(link)
+            items = results['items']
+            while results['next']:
+                results = sp.next(results)
+                items.extend(results['items'])
+            urls = []
+            for item in items:
+                track = item['external_urls']
+                urls.append(track['spotify'])
+            tracks = urls
+        else:
+            tracks = []
+            error = 'spotipy_keys'
+
+    # An artist URI or URL?
+    # https://open.spotify.com/artist/5Pqc0ZFA20Y9zGJZ3ojUin?si=M5y9h5sxTgSnhSf9ZjLcbQ
+    elif link.startswith("spotify:artist:") or link.startswith("https://open.spotify.com/artist/"):
+        sp = verify_spotipy_client_credentials()
+        if sp is not None:
+            # Fetching this artist's top tracks
+            results = sp.artist_top_tracks(link)
+            items = results['tracks']
+            urls = []
+            for item in items:
+                track = item['external_urls']
+                urls.append(track['spotify'])
+            tracks = urls
+        else:
+            tracks = []
+            error = 'spotipy_keys'
+
+    else:
+        tracks = []
+        error = 'unknown_input'
 
     if start_from == 0:
-        return tracks
+        return tracks, error
     else:
-        return tracks[start_from:]
+        return tracks[start_from:], error
 
 
 def remove_bad_characters(s):
@@ -208,6 +215,11 @@ def resource_path(path):
         return os.path.join(os.path.abspath('.'), path)
     else:
         return path
+
+
+'''
+Ripper
+'''
 
 
 class Ripper:
@@ -591,22 +603,33 @@ def main_gui():
             self.volume.setText("{:4.2f}/{:4.2f}".format(x, self.max_volume))
 
         def execute_this_fn(self, progress_callback, soundbar_callback):
-            tracks = parse_input(self.link_widget.text(), int(self.start_spinbox.value()) - 1)
-            progress_callback.emit("Ripping {} tracks.".format(len(tracks)))
+            tracks, error = parse_input(self.link_widget.text(), int(self.start_spinbox.value()) - 1)
+            if error is None:
+                progress_callback.emit("Ripping {} tracks.".format(len(tracks)))
 
-            for track in tracks:
-                # Load settings (in theory, they could have been changed in the meanwhile)
-                settings = settings_lib.load_settings()
-                if not DRYRUN:
-                    ripper = Ripper(rip_dir=settings["rip_dir"],
-                                    ripped_folder_structure=settings["ripped_folder_structure"],
-                                    gui=True,
-                                    gui_progress_callback=progress_callback,
-                                    gui_soundbar_callback=soundbar_callback)
-                    self.max_volume = 0.0
-                    ripper.rip(convert_to_uri(track.rstrip()))
-                else:
-                    progress_callback.emit(track)
+                for track in tracks:
+                    # Load settings (in theory, they could have been changed in the meanwhile)
+                    settings = settings_lib.load_settings()
+                    if not DRYRUN:
+                        ripper = Ripper(rip_dir=settings["rip_dir"],
+                                        ripped_folder_structure=settings["ripped_folder_structure"],
+                                        gui=True,
+                                        gui_progress_callback=progress_callback,
+                                        gui_soundbar_callback=soundbar_callback)
+                        self.max_volume = 0.0
+                        ripper.rip(convert_to_uri(track.rstrip()))
+                    else:
+                        progress_callback.emit(track)
+
+            elif error == 'spotipy_keys':
+                progress_callback.emit(
+                    "Error: fetching a playlist requires user authentication. Make sure Spotify Client ID and Client Secret are set.")
+
+            elif error == 'unknown_input':
+                progress_callback.emit("Error: unknown input.")
+
+            else:
+                pass
 
         def print_output(self, s):
             print(s)
@@ -647,7 +670,7 @@ def main_gui():
                 settings = settings_lib.load_settings()
 
                 self.setWindowTitle("Settings")
-                self.setFixedSize(QSize(500, 200))
+                self.setFixedSize(QSize(500, 240))
 
                 grid_layout = QGridLayout()
                 grid_layout.rowMinimumHeight(40)
@@ -679,6 +702,11 @@ def main_gui():
                 grid_layout.addWidget(spotipy_client_secret_label, 2, 0)
                 grid_layout.addWidget(spotipy_client_secret_edit, 2, 1)
 
+                spotipy_client_info_label = QLabel(self)
+                spotipy_client_info_label.setText("If left empty, env. variables SPOTIPY_CLIENT_ID\nand SPOTIPY_CLIENT_SECRET will be used.")
+                spotipy_client_info_label.setFixedHeight(50)
+                grid_layout.addWidget(spotipy_client_info_label, 3, 1)
+
                 buttonbox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
                 buttonbox.accepted.connect(self.accept)
                 self.accepted.connect(lambda: settings_lib.write_setting((("rip_dir",
@@ -699,6 +727,10 @@ def main_gui():
     window.show()
     sys.exit(app.exec())
 
+
+'''
+Main
+'''
 
 if __name__ == "__main__":
     if not os.path.exists("settings.json"):

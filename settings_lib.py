@@ -34,7 +34,6 @@ def write_setting(pairs):
                 value = value + "/"
 
         # Modify settings
-        print(key + " " + value)
         settings[key] = value
 
     # Write settings
