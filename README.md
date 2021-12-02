@@ -4,7 +4,11 @@
 
 [Latest build](dist/spotiripper), developed with Python 3.9.7 and built on MacOS 12.0.1.
 
-## Usage
+## Usage GUI    
+
+This should be pretty straightforward.
+
+## Usage command line
 
     spotiripper <track URI>")
     spotiripper <track URL>")
