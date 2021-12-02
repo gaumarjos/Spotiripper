@@ -174,7 +174,6 @@ def parse_input(link, start_from=0):
             error = 'spotipy_keys'
 
     # An artist URI or URL?
-    # https://open.spotify.com/artist/5Pqc0ZFA20Y9zGJZ3ojUin?si=M5y9h5sxTgSnhSf9ZjLcbQ
     elif link.startswith("spotify:artist:") or link.startswith("https://open.spotify.com/artist/"):
         sp = verify_spotipy_client_credentials()
         if sp is not None:
@@ -269,8 +268,11 @@ class Ripper:
         time.sleep(.300)
 
         # Start recorder
-        self.recfile = Recorder(self.tmp_dir + self.tmp_wav, terminal_width=self.terminal_width,
-                                gui=self.gui, gui_soundbar_callback=self.gui_soundbar_callback)
+        self.recfile = Recorder(self.tmp_dir + self.tmp_wav,
+                                terminal_width=self.terminal_width,
+                                gui=self.gui,
+                                gui_progress_callback=self.gui_progress_callback,
+                                gui_soundbar_callback=self.gui_soundbar_callback)
         # self.recfile.getinfo()
 
         self.recfile.start_recording()
@@ -385,12 +387,12 @@ def main():
     settings = settings_lib.load_settings()
 
     # Understand what the command line input is
-    tracks = []
     if len(sys.argv) < 2:
         help()
+        return
     elif len(sys.argv) == 2:
         tracks = parse_input(sys.argv[1])
-    elif len(sys.argv) == 3:
+    else:
         try:
             start_from = int(sys.argv[2]) - 1
         except:
@@ -405,6 +407,7 @@ def main():
             ripper.rip(convert_to_uri(track.rstrip()))
         else:
             print(track)
+    return
 
 
 '''
@@ -499,8 +502,6 @@ def main_gui():
             self.errorFormat.setBackground(QColor(MACOSRED[0], MACOSRED[1], MACOSRED[2]))
 
         def highlightBlock(self, text):
-            # uncomment this line for Python2
-            # text = unicode(text)
             if text.startswith('Track'):
                 self.setFormat(0, len(text), self.trackFormat)
             elif text.startswith('Warning'):
@@ -512,14 +513,11 @@ def main_gui():
         def __init__(self):
             window_w = 700
             window_h = 300
-
             link_h = 30
             button_w = 60
             label_w = 30
             spinbox_w = 60
-
             soundbar_h = 10
-
             volume_h = 20
             volume_w = 70
             margin = 10
@@ -585,7 +583,7 @@ def main_gui():
             # Menu bar
             change_settings_action = QAction("&Edit settings", self)
             change_settings_action.setStatusTip("This is your button")
-            change_settings_action.triggered.connect(self.rip_dir_menu)
+            change_settings_action.triggered.connect(self.settings_menu)
             menu = self.menuBar()
             file_menu = menu.addMenu("&Spotiripper")
             file_menu.addAction(change_settings_action)
@@ -631,10 +629,10 @@ def main_gui():
             else:
                 pass
 
-        def print_output(self, s):
-            print(s)
+        def result_fn(self, s):
+            pass
 
-        def thread_complete(self):
+        def finished_fn(self):
             # Re-enable fields
             self.button.setEnabled(True)
             self.link_widget.setReadOnly(False)
@@ -643,8 +641,8 @@ def main_gui():
         def button_clicked(self):
             # Pass the function to execute
             worker = Worker(self.execute_this_fn)  # Any other args, kwargs are passed to the run function
-            worker.signals.result.connect(self.print_output)
-            worker.signals.finished.connect(self.thread_complete)
+            worker.signals.result.connect(self.result_fn)
+            worker.signals.finished.connect(self.finished_fn)
             worker.signals.progress_signal.connect(self.progress_fn)
             worker.signals.soundbar_signal.connect(self.soundbar_fn)
 
@@ -659,11 +657,11 @@ def main_gui():
             # Execute
             self.threadpool.start(worker)
 
-        def rip_dir_menu(self):
-            dlg = self.CustomDialog()
+        def settings_menu(self):
+            dlg = self.SettingsDialog()
             dlg.exec()
 
-        class CustomDialog(QDialog):
+        class SettingsDialog(QDialog):
             def __init__(self, parent=None):  # <1>
                 super().__init__(parent)
 

@@ -3,6 +3,8 @@
 DOCUMENTATION
 https://raspberrypi.stackexchange.com/questions/69611/pyaudio-record-audio-using-non-blocking-callback
 https://dolby.io/blog/capturing-high-quality-audio-with-python-and-pyaudio/
+
+Note: I haven't update this function when I created the GUI. Some changes are necessary.
 '''
 
 '''

@@ -25,7 +25,12 @@ assert numpy  # avoid "imported but unused" message (W0611)
 
 
 class Recorder(object):
-    def __init__(self, fname=None, terminal_width=80, gui=False, gui_soundbar_callback=None):
+    def __init__(self,
+                 fname=None,
+                 terminal_width=80,
+                 gui=False,
+                 gui_progress_callback=None,
+                 gui_soundbar_callback=None):
 
         if fname is None:
             self.fname = tempfile.mktemp(prefix='sounddevice_', suffix='.wav', dir='')
@@ -34,48 +39,60 @@ class Recorder(object):
 
         self.mode = 'x'
 
+        self.terminal_width = terminal_width
+        self.gui = gui
+        self.gui_progress_callback = gui_progress_callback
+        self.gui_soundbar_callback = gui_soundbar_callback
+
         raw_devices = sd.query_devices()
         self.default_input_device = sd.query_devices(kind='input')
         self.default_output_device = sd.query_devices(kind='output')
 
+        # Check if the input device name seems correct
         if "blackhole" not in self.default_input_device['name'].lower():
-            print(colorama.Fore.LIGHTYELLOW_EX,
-                  "Warning: the input device '{}' seems not to be 'BlackHole'".format(
-                      self.default_input_device['name']),
-                  colorama.Style.RESET_ALL)
+            toprint = "Warning: the input device '{}' seems not to be 'BlackHole'".format(
+                self.default_input_device['name'])
+            if self.gui:
+                gui_progress_callback.emit(toprint)
+            else:
+                print(colorama.Fore.LIGHTYELLOW_EX, toprint, colorama.Style.RESET_ALL)
         self.device = raw_devices.index(self.default_input_device)
 
         self.device_info = sd.query_devices(self.device, kind='input')
 
+        # Check if the number of input channels seems correct
         self.channels = int(self.device_info['max_input_channels'])
         if self.channels != 2:
-            print(colorama.Fore.LIGHTYELLOW_EX,
-                  "Warning: the number of channels ({}) is not 2.".format(self.channels),
-                  colorama.Style.RESET_ALL)
+            toprint = "Warning: the number of channels ({}) is not 2.".format(self.channels)
+            if self.gui:
+                gui_progress_callback.emit(toprint)
+            else:
+                print(colorama.Fore.LIGHTYELLOW_EX, toprint, colorama.Style.RESET_ALL)
 
         self.rate = int(self.device_info['default_samplerate'])
 
-        # Check output device (not strictly necessary for recording, just making sure output and input parameters
-        # correspond)
+        # Check if the number of output channels seems correct
         if self.default_output_device['max_output_channels'] != self.channels:
-            print(colorama.Fore.LIGHTYELLOW_EX,
-                  "Warning: the number of channels of the output ({}) and input ({}) devices do not correspond.".format(
-                      self.default_output_device['max_output_channels'], self.channels),
-                  colorama.Style.RESET_ALL)
+            toprint = "Warning: the numbers of channels of the output ({}) and input ({}) devices do not correspond.".format(
+                self.default_output_device['max_output_channels'], self.channels)
+            if self.gui:
+                gui_progress_callback.emit(toprint)
+            else:
+                print(colorama.Fore.LIGHTYELLOW_EX, toprint, colorama.Style.RESET_ALL)
+
+        # Check if the sample rate of the output device seems correct
         if self.default_output_device['default_samplerate'] != self.rate:
-            print(colorama.Fore.LIGHTYELLOW_EX,
-                  "Warning: the sample rate of the output ({}) and input ({}) devices do not correspond.".format(
-                      self.default_output_device['default_samplerate'], self.rate),
-                  colorama.Style.RESET_ALL)
+            toprint = "Warning: the sample rates of the output ({}) and input ({}) devices do not correspond.".format(
+                self.default_output_device['default_samplerate'], self.rate)
+            if self.gui:
+                gui_progress_callback.emit(toprint)
+            else:
+                print(colorama.Fore.LIGHTYELLOW_EX, toprint, colorama.Style.RESET_ALL)
 
         self.subtype = None
-
         self.q = queue.Queue()
         self.t = None
 
-        self.terminal_width = terminal_width
-        self.gui = gui
-        self.gui_soundbar_callback = gui_soundbar_callback
         self.bar = SoundBar(limitx=1.0,
                             terminal_width=self.terminal_width,
                             gui=self.gui,
