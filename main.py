@@ -20,9 +20,9 @@ import colorama
 # from converter_ffmpeg import convert_to_mp3
 import spotipy
 from PySide6.QtCore import Qt, QSize, QRunnable, Slot, Signal, QObject, QThreadPool
-from PySide6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QIcon
+from PySide6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QIcon, QAction
 from PySide6.QtWidgets import QApplication, QMainWindow, QTextEdit, QLineEdit, QPushButton, QSpinBox, QLabel, \
-    QProgressBar
+    QProgressBar, QDialog, QDialogButtonBox, QVBoxLayout, QHBoxLayout
 from spotipy.oauth2 import SpotifyClientCredentials
 
 from converter_pydub import convert_to_mp3
@@ -31,7 +31,7 @@ from recorder_sounddevice import Recorder
 
 # from plyer import notification
 
-VERSION = "2021-12-01"
+VERSION = "2021-12-02"
 DRYRUN = False
 
 MACOSRED = (236, 95, 93)
@@ -567,7 +567,15 @@ def main_gui():
             QApplication.clipboard().dataChanged.connect(self.clipboard_changed)
 
             self.threadpool = QThreadPool()
-            print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
+            # print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
+
+            # Menu bar
+            change_settings_action = QAction("&Edit settings", self)
+            change_settings_action.setStatusTip("This is your button")
+            change_settings_action.triggered.connect(self.rip_dir_menu)
+            menu = self.menuBar()
+            file_menu = menu.addMenu("&Spotiripper")
+            file_menu.addAction(change_settings_action)
 
         def clipboard_changed(self):
             self.link_widget.setText(QApplication.clipboard().text())
@@ -627,6 +635,42 @@ def main_gui():
             # Execute
             self.threadpool.start(worker)
 
+        def rip_dir_menu(self):
+            dlg = self.CustomDialog()
+            dlg.exec()
+
+        class CustomDialog(QDialog):
+            def __init__(self, parent=None):  # <1>
+                super().__init__(parent)
+
+                settings = load_settings()
+
+                self.setWindowTitle("Settings")
+                self.setFixedSize(QSize(500, 100))
+                QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+
+                rip_dir_label = QLabel(self)
+                rip_dir_label.setText("Rip directory")
+                # rip_dir_label.setGeometry(10,10,80,20)
+                rip_dir_edit = QLineEdit(self)
+                rip_dir_edit.setText(settings["rip_dir"])
+                # rip_dir_edit.setGeometry(90, 10, 200, 20)
+                # rip_dir_edit.
+                rip_dir_layout = QHBoxLayout()
+                rip_dir_layout.addWidget(rip_dir_label)
+                rip_dir_layout.addWidget(rip_dir_edit)
+
+                buttonBox = QDialogButtonBox(QBtn)
+                buttonBox.accepted.connect(self.accept)
+                # self.accepted.connect(write_setting)
+                self.accepted.connect(lambda: write_setting("rip_dir", rip_dir_edit.text()))
+                buttonBox.rejected.connect(self.reject)
+
+                layout = QVBoxLayout()
+                layout.addLayout(rip_dir_layout)
+                layout.addWidget(buttonBox)
+                self.setLayout(layout)
+
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
@@ -634,11 +678,11 @@ def main_gui():
 
 
 def create_settings():
-    dict = {
+    settings = {
         "rip_dir": os.path.expanduser('~') + '/Downloads/Ripped/',
         "ripped_folder_structure": "flat"
     }
-    json_data = json.dumps(dict, indent=4)
+    json_data = json.dumps(settings, indent=4)
     with open("settings.json", "w") as outfile:
         outfile.write(json_data)
 
@@ -647,6 +691,25 @@ def load_settings():
     with open("settings.json", "r") as j:
         settings = json.load(j)
     return settings
+
+
+def write_setting(key, value):
+    # Read settings
+    with open('settings.json', 'r') as j_in:
+        settings = json.load(j_in)
+
+    # Validate values
+    if key == "rip_dir":
+        if not value.endswith("/"):
+            value = value + "/"
+
+    # Modify settings
+    settings[key] = value
+
+    # Write settings
+    json_data = json.dumps(settings, indent=4)
+    with open("settings.json", "w") as j_out:
+        j_out.write(json_data)
 
 
 if __name__ == "__main__":
