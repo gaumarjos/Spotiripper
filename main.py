@@ -14,6 +14,7 @@ import subprocess
 import sys
 import time
 import traceback
+import settings_lib
 import json
 from urllib.request import urlopen
 import colorama
@@ -22,7 +23,7 @@ import spotipy
 from PySide6.QtCore import Qt, QSize, QRunnable, Slot, Signal, QObject, QThreadPool
 from PySide6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QIcon, QAction
 from PySide6.QtWidgets import QApplication, QMainWindow, QTextEdit, QLineEdit, QPushButton, QSpinBox, QLabel, \
-    QProgressBar, QDialog, QDialogButtonBox, QVBoxLayout, QHBoxLayout
+    QProgressBar, QDialog, QDialogButtonBox, QVBoxLayout, QHBoxLayout, QGridLayout
 from spotipy.oauth2 import SpotifyClientCredentials
 
 from converter_pydub import convert_to_mp3
@@ -369,7 +370,7 @@ def main():
         os.environ['PYTHONIOENCODING'] = str("utf-8")
 
     # Load settings
-    settings = load_settings()
+    settings = settings_lib.load_settings()
 
     # Understand what the command line input is
     tracks = []
@@ -595,7 +596,7 @@ def main_gui():
 
             for track in tracks:
                 # Load settings (in theory, they could have been changed in the meanwhile)
-                settings = load_settings()
+                settings = settings_lib.load_settings()
                 if not DRYRUN:
                     ripper = Ripper(rip_dir=settings["rip_dir"],
                                     ripped_folder_structure=settings["ripped_folder_structure"],
@@ -643,32 +644,54 @@ def main_gui():
             def __init__(self, parent=None):  # <1>
                 super().__init__(parent)
 
-                settings = load_settings()
+                settings = settings_lib.load_settings()
 
                 self.setWindowTitle("Settings")
-                self.setFixedSize(QSize(500, 100))
-                QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+                self.setFixedSize(QSize(500, 200))
+
+                grid_layout = QGridLayout()
+                grid_layout.rowMinimumHeight(40)
 
                 rip_dir_label = QLabel(self)
                 rip_dir_label.setText("Rip directory")
-                # rip_dir_label.setGeometry(10,10,80,20)
+                rip_dir_label.setFixedHeight(25)
                 rip_dir_edit = QLineEdit(self)
                 rip_dir_edit.setText(settings["rip_dir"])
-                # rip_dir_edit.setGeometry(90, 10, 200, 20)
-                # rip_dir_edit.
-                rip_dir_layout = QHBoxLayout()
-                rip_dir_layout.addWidget(rip_dir_label)
-                rip_dir_layout.addWidget(rip_dir_edit)
+                rip_dir_edit.setFixedHeight(25)
+                grid_layout.addWidget(rip_dir_label, 0, 0)
+                grid_layout.addWidget(rip_dir_edit, 0, 1)
 
-                buttonBox = QDialogButtonBox(QBtn)
-                buttonBox.accepted.connect(self.accept)
-                # self.accepted.connect(write_setting)
-                self.accepted.connect(lambda: write_setting("rip_dir", rip_dir_edit.text()))
-                buttonBox.rejected.connect(self.reject)
+                spotipy_client_id_label = QLabel(self)
+                spotipy_client_id_label.setText("Spotipy Cliend ID")
+                spotipy_client_id_label.setFixedHeight(25)
+                spotipy_client_id_edit = QLineEdit(self)
+                spotipy_client_id_edit.setText(settings["spotipy_client_id"])
+                spotipy_client_id_edit.setFixedHeight(25)
+                grid_layout.addWidget(spotipy_client_id_label, 1, 0)
+                grid_layout.addWidget(spotipy_client_id_edit, 1, 1)
+
+                spotipy_client_secret_label = QLabel(self)
+                spotipy_client_secret_label.setText("Spotipy Cliend Secret")
+                spotipy_client_secret_label.setFixedHeight(25)
+                spotipy_client_secret_edit = QLineEdit(self)
+                spotipy_client_secret_edit.setText(settings["spotipy_client_secret"])
+                spotipy_client_secret_edit.setFixedHeight(25)
+                grid_layout.addWidget(spotipy_client_secret_label, 2, 0)
+                grid_layout.addWidget(spotipy_client_secret_edit, 2, 1)
+
+                buttonbox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+                buttonbox.accepted.connect(self.accept)
+                self.accepted.connect(lambda: settings_lib.write_setting((("rip_dir",
+                                                                           rip_dir_edit.text()),
+                                                                          ("spotipy_client_id",
+                                                                           spotipy_client_id_edit.text()),
+                                                                          ("spotipy_client_secret",
+                                                                           spotipy_client_secret_edit.text()))))
+                buttonbox.rejected.connect(self.reject)
 
                 layout = QVBoxLayout()
-                layout.addLayout(rip_dir_layout)
-                layout.addWidget(buttonBox)
+                layout.addLayout(grid_layout)
+                layout.addWidget(buttonbox)
                 self.setLayout(layout)
 
     app = QApplication(sys.argv)
@@ -677,44 +700,9 @@ def main_gui():
     sys.exit(app.exec())
 
 
-def create_settings():
-    settings = {
-        "rip_dir": os.path.expanduser('~') + '/Downloads/Ripped/',
-        "ripped_folder_structure": "flat"
-    }
-    json_data = json.dumps(settings, indent=4)
-    with open("settings.json", "w") as outfile:
-        outfile.write(json_data)
-
-
-def load_settings():
-    with open("settings.json", "r") as j:
-        settings = json.load(j)
-    return settings
-
-
-def write_setting(key, value):
-    # Read settings
-    with open('settings.json', 'r') as j_in:
-        settings = json.load(j_in)
-
-    # Validate values
-    if key == "rip_dir":
-        if not value.endswith("/"):
-            value = value + "/"
-
-    # Modify settings
-    settings[key] = value
-
-    # Write settings
-    json_data = json.dumps(settings, indent=4)
-    with open("settings.json", "w") as j_out:
-        j_out.write(json_data)
-
-
 if __name__ == "__main__":
     if not os.path.exists("settings.json"):
-        create_settings()
+        settings_lib.create_settings()
 
     if len(sys.argv) < 2:
         main_gui()
