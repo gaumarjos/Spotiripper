@@ -2,6 +2,7 @@
 .idea/
 spotiripper.spec
 build/
+dist/
 tmp/
 .DS_Store
 __pycache__/
