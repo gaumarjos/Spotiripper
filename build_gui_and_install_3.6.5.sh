@@ -3,7 +3,7 @@
 # https://dev.to/kojikanao/install-python-3-7-3-6-and-3-5-on-bigsure-with-pyenv-3ij2
 
 # Remember to install pyenv Python with
-# env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.9.7
+# env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.6.5
 
 # Build
 clear
@@ -13,17 +13,17 @@ pyinstaller --noconfirm --log-level=ERROR \
     --onefile \
     --windowed \
     --name Spotiripper \
-    --paths ~/.pyenv/versions/spotiripper/ \
-    --paths ~/.pyenv/versions/3.6.5/envs/spotiripper/lib/python3.6/site-packages/ \
+    --paths ~/.pyenv/versions/spotiripper_3.6.5/ \
+    --paths ~/.pyenv/versions/3.6.5/envs/spotiripper_3.6.5/lib/python3.6/site-packages/ \
     --add-data settings.json:. \
     --add-data spotiripper.png:. \
     --icon spotiripper.png \
-    --hidden-import PySide6 \
-    --hidden-import PySide6.QtWidgets \
-    --hidden-import PySide6.QtGui \
-    --hidden-import PySide6.QtCore \
+    --hidden-import PySide2 \
+    --hidden-import PySide2.QtWidgets \
+    --hidden-import PySide2.QtGui \
+    --hidden-import PySide2.QtCore \
     --debug imports \
-    main.py
+    spotiripper.py
 
 # --hidden-import plyer.platforms.macosx.notification \
 
