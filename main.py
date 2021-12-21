@@ -13,16 +13,23 @@ import traceback
 import settings_lib
 import colorama
 import spotipy
-from PySide6.QtCore import Qt, QSize, QRunnable, Slot, Signal, QObject, QThreadPool
-from PySide6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QIcon, QAction
-from PySide6.QtWidgets import QApplication, QMainWindow, QTextEdit, QLineEdit, QPushButton, QSpinBox, QLabel, \
-    QProgressBar, QDialog, QDialogButtonBox, QVBoxLayout, QGridLayout
 from spotipy.oauth2 import SpotifyClientCredentials
-
 from ripper import Ripper
 
-VERSION = "2021-12-03"
+VERSION = "2021-12-21"
 DRYRUN = False
+PYSIDE_VERSION = 2
+
+if PYSIDE_VERSION == 2:
+    from PySide2.QtCore import Qt, QSize, QRunnable, Slot, Signal, QObject, QThreadPool
+    from PySide2.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QIcon
+    from PySide2.QtWidgets import QApplication, QMainWindow, QTextEdit, QLineEdit, QPushButton, QSpinBox, QLabel, \
+        QProgressBar, QDialog, QDialogButtonBox, QVBoxLayout, QGridLayout, QAction
+elif PYSIDE_VERSION == 6:
+    from PySide6.QtCore import Qt, QSize, QRunnable, Slot, Signal, QObject, QThreadPool
+    from PySide6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QIcon, QAction
+    from PySide6.QtWidgets import QApplication, QMainWindow, QTextEdit, QLineEdit, QPushButton, QSpinBox, QLabel, \
+        QProgressBar, QDialog, QDialogButtonBox, QVBoxLayout, QGridLayout
 
 MACOSRED = (236, 95, 93)
 MACOSORANGE = (232, 135, 58)
@@ -535,7 +542,10 @@ def main_gui():
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
-    sys.exit(app.exec())
+    if PYSIDE_VERSION == 2:
+        sys.exit(app.exec_())
+    elif PYSIDE_VERSION == 6:
+        sys.exit(app.exec())
 
 
 '''
