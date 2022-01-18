@@ -1,5 +1,6 @@
 .cache
 .idea/
+.eggs/
 spotiripper.spec
 build/
 dist/
