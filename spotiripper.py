@@ -18,7 +18,7 @@ from ripper import Ripper
 
 VERSION = "2021-12-21"
 DRYRUN = False
-PYSIDE_VERSION = 6
+PYSIDE_VERSION = 2
 
 if PYSIDE_VERSION == 2:
     from PySide2.QtCore import Qt, QSize, QRunnable, Slot, Signal, QObject, QThreadPool

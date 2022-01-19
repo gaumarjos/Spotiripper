@@ -18,10 +18,10 @@ pyinstaller==4.8
 pyinstaller-hooks-contrib==2021.5
 pyparsing==2.4.7
 PySide2==5.15.2.1
-PySide6==6.2.1
+PySide6==6.2.2.1
 requests==2.26.0
 shiboken2==5.15.2.1
-shiboken6==6.2.1
+shiboken6==6.2.2.1
 six==1.16.0
 sounddevice==0.4.3
 SoundFile==0.10.3.post1
