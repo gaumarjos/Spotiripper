@@ -5,6 +5,7 @@ spotiripper.spec
 build/
 dist/
 tmp/
+errors.txt
 .DS_Store
 __pycache__/
 set_env_variables.sh
