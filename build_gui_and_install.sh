@@ -17,7 +17,7 @@ pyinstaller --noconfirm --log-level=WARN --clean --onefile --windowed \
   --add-data settings.json:. \
   --add-data spotiripper.png:. \
   --icon spotiripper.png \
-  --hidden-import PySide2 \
+  --hidden-import PySide2.QtQml \
   --hidden-import PySide2.QtWidgets \
   --hidden-import PySide2.QtGui \
   --hidden-import PySide2.QtCore \
