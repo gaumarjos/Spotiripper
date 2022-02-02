@@ -19,7 +19,7 @@ import numpy
 from spotipy.oauth2 import SpotifyClientCredentials
 from ripper import Ripper
 
-VERSION = "2021-12-21"
+VERSION = "2022-02-02"
 DRYRUN = False
 PYSIDE_VERSION = 2
 

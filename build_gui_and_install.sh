@@ -26,11 +26,13 @@ pyinstaller --noconfirm --log-level=WARN --clean --onefile --windowed \
   spotiripper.py
 
 # --hidden-import plyer.platforms.macosx.notification \
-# --paths ~/.pyenv/versions/spotiripper/ \
-# --hidden-import PySide6 \
-# --hidden-import PySide6.QtWidgets \
-# --hidden-import PySide6.QtGui \
-# --hidden-import PySide6.QtCore \
+
+# Still not working with 6. It asks for a QtDBus but when added as as hidden import it cannot include it.
+#  --hidden-import PySide6.QtQml \
+#  --hidden-import PySide6.QtDBus \
+#  --hidden-import PySide6.QtWidgets \
+#  --hidden-import PySide6.QtGui \
+#  --hidden-import PySide6.QtCore \
 
 
 #  --paths ~/.pyenv/versions/spotiripper_3.6.5/ \
