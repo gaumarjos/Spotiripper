@@ -5,6 +5,8 @@ https://spotipy.readthedocs.io/en/2.19.0/
 https://github.com/skybjohnson/spotipy_examples/blob/master/playlist_tracks_and_genre.py
 https://stackoverflow.com/questions/53761033/pydub-play-audio-from-variable
 https://betterprogramming.pub/simple-audio-processing-in-python-with-pydub-c3a217dabf11
+
+https://gist.github.com/zfarbp/581ce7e50a1b5740b4d31f007cac87fb
 '''
 
 import os
@@ -355,9 +357,11 @@ def main_gui():
             self.link_widget.setAlignment(Qt.AlignCenter)
             # self.link_widget.setText("Paste link from Spotify")
             # self.link_widget.setText(QApplication.clipboard().text())
+
             # Useful for debugging
-            self.link_widget.setText("https://open.spotify.com/album/02GEKxoVe5ITAj68mZRAM7?si=Lt987xTASliFEqZAvkTrdw")
-            # self.link_widget.insertPlainText("Paste link from Spotify")
+            # self.link_widget.setText("https://open.spotify.com/album/02GEKxoVe5ITAj68mZRAM7?si=Lt987xTASliFEqZAvkTrdw")
+
+            self.link_widget.setPlaceholderText("Paste link from Spotify")
             self.link_widget.setGeometry(margin, margin, link_w, link_h)
 
             self.button = QPushButton(self)

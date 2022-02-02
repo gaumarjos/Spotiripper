@@ -112,7 +112,12 @@ class Ripper:
         artwork = subprocess.Popen(
             'osascript -e "tell application \\"Spotify\\"" -e "current track\'s artwork url" -e "end tell"', shell=True,
             stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
-        artworkdata = urlopen(artwork).read()
+
+        # Added because this is sometimes empty (debug)
+        if artwork is not None and len(artwork) > 0:
+            artworkdata = urlopen(artwork).read()
+        else:
+            artworkdata = None
 
         # Print artist and track names extracted from Spotify
         toprint = "Track: {}, {}".format(artist, track)
@@ -157,7 +162,8 @@ class Ripper:
 
         # Set and/or update ID3 information
         mp3file = eyed3.load(self.tmp_dir + self.tmp_mp3)
-        mp3file.tag.images.set(3, artworkdata, "image/jpeg", track)
+        if artworkdata is not None:
+            mp3file.tag.images.set(3, artworkdata, "image/jpeg", track)
         mp3file.tag.artist = artist
         mp3file.tag.album = album
         mp3file.tag.title = track
