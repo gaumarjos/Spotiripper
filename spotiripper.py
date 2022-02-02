@@ -13,6 +13,7 @@ import traceback
 import settings_lib
 import colorama
 import spotipy
+import numpy
 from spotipy.oauth2 import SpotifyClientCredentials
 from ripper import Ripper
 
@@ -21,15 +22,16 @@ DRYRUN = False
 PYSIDE_VERSION = 2
 
 if PYSIDE_VERSION == 2:
-    from PySide2.QtCore import Qt, QSize, QRunnable, Slot, Signal, QObject, QThreadPool
-    from PySide2.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QIcon
     from PySide2.QtWidgets import QApplication, QMainWindow, QTextEdit, QLineEdit, QPushButton, QSpinBox, QLabel, \
         QProgressBar, QDialog, QDialogButtonBox, QVBoxLayout, QGridLayout, QAction
+    from PySide2.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QIcon
+    from PySide2.QtCore import Qt, QSize, QRunnable, Slot, Signal, QObject, QThreadPool
 elif PYSIDE_VERSION == 6:
-    from PySide6.QtCore import Qt, QSize, QRunnable, Slot, Signal, QObject, QThreadPool
-    from PySide6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QIcon, QAction
     from PySide6.QtWidgets import QApplication, QMainWindow, QTextEdit, QLineEdit, QPushButton, QSpinBox, QLabel, \
         QProgressBar, QDialog, QDialogButtonBox, QVBoxLayout, QGridLayout
+    from PySide6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QIcon, QAction
+    from PySide6.QtCore import Qt, QSize, QRunnable, Slot, Signal, QObject, QThreadPool
+
 
 MACOSRED = (236, 95, 93)
 MACOSORANGE = (232, 135, 58)
