@@ -5,6 +5,7 @@ import time
 from urllib.request import urlopen
 import eyed3
 import colorama
+import csv
 # from converter_ffmpeg import convert_to_mp3
 from converter_pydub import convert_to_mp3
 # from recorder_pyaudio import Recorder
@@ -66,8 +67,8 @@ class Ripper:
         self.gui_progress_callback = gui_progress_callback
         self.gui_soundbar_callback = gui_soundbar_callback
 
-    def rip(self, track):
-        toprint = "Ripping track {}...".format(track)
+    def rip(self, trackuri):
+        toprint = "Ripping track {}...".format(trackuri)
         if self.gui:
             self.gui_progress_callback.emit(toprint)
         else:
@@ -94,7 +95,7 @@ class Ripper:
 
         # Tell Spotify to play a specified song
         subprocess.Popen(
-            'osascript -e "tell application \\"Spotify\\"" -e "play track \\"' + track + '\\"" -e "end tell"',
+            'osascript -e "tell application \\"Spotify\\"" -e "play track \\"' + trackuri + '\\"" -e "end tell"',
             shell=True, stdout=subprocess.PIPE).stdout.read()
 
         time.sleep(1)
@@ -118,6 +119,11 @@ class Ripper:
             artworkdata = urlopen(artwork).read()
         else:
             artworkdata = None
+
+        # Log to CSV
+        with open('log.csv', 'a') as logfile:
+            log = csv.writer(logfile)
+            log.writerow([trackuri, artist, track, album])
 
         # Print artist and track names extracted from Spotify
         toprint = "Track: {}, {}".format(artist, track)
