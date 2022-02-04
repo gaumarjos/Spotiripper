@@ -15,7 +15,6 @@ import traceback
 import settings_lib
 import colorama
 import spotipy
-import numpy
 from spotipy.oauth2 import SpotifyClientCredentials
 from ripper import Ripper
 
