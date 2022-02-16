@@ -15,6 +15,7 @@ pyinstaller --noconfirm --log-level=WARN --clean --onefile --windowed \
   --name Spotiripper \
   --paths $lib_location \
   --add-data settings.json:. \
+  --add-data log.csv:. \
   --add-data spotiripper.png:. \
   --icon spotiripper.png \
   --hidden-import PySide2.QtQml \
