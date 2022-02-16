@@ -8,7 +8,7 @@ def convert_to_mp3(infile, outfile, gaindb=0):
         sound = AudioSegment.from_file(infile, format="wav")
         # start_trim = detect_leading_silence(sound)
         # end_trim = detect_leading_silence(sound.reverse())
-        start_trim = 200
+        start_trim = 300
         trimmed_sound = sound[start_trim:]
         output = AudioSegment.empty()
         output = trimmed_sound
