@@ -18,8 +18,8 @@ import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 from ripper import Ripper
 
-VERSION = "2022-02-02"
-DRYRUN = False
+VERSION = "2022-02-16"
+DRYRUN = True
 PYSIDE_VERSION = 2
 
 if PYSIDE_VERSION == 2:
@@ -107,17 +107,17 @@ def verify_spotipy_client_credentials():
 
 
 def parse_input(link, start_from=0):
-    tracks = []
+    track_list = []
     error = None
 
     # A track URI or URL?
     if link.startswith("spotify:track:") or link.startswith("https://open.spotify.com/track/"):
-        tracks = [link]
+        track_list = [link]
 
     # A txt list with track URIs or URLs?
     elif link.endswith(".txt"):
         file = open(link)
-        tracks = file.readlines()
+        track_list = file.readlines()
         file.close()
 
     # A playlist URI or URL?
@@ -134,9 +134,9 @@ def parse_input(link, start_from=0):
             for item in items:
                 track = item['track']
                 uris.append(track['uri'])
-            tracks = uris
+            track_list = uris
         else:
-            tracks = []
+            track_list = []
             error = 'spotipy_keys'
 
     # An album URI or URL?
@@ -153,9 +153,9 @@ def parse_input(link, start_from=0):
             for item in items:
                 track = item['external_urls']
                 urls.append(track['spotify'])
-            tracks = urls
+            track_list = urls
         else:
-            tracks = []
+            track_list = []
             error = 'spotipy_keys'
 
     # An artist URI or URL?
@@ -169,19 +169,19 @@ def parse_input(link, start_from=0):
             for item in items:
                 track = item['external_urls']
                 urls.append(track['spotify'])
-            tracks = urls
+            track_list = urls
         else:
-            tracks = []
+            track_list = []
             error = 'spotipy_keys'
 
     else:
-        tracks = []
+        track_list = []
         error = 'unknown_input'
 
     if start_from == 0:
-        return tracks, error
+        return track_list, error
     else:
-        return tracks[start_from:], error
+        return track_list[start_from:], error
 
 
 def resource_path(path):
@@ -212,13 +212,14 @@ def main():
         help()
         return
     elif len(sys.argv) == 2:
-        tracks = parse_input(sys.argv[1])
+        tracks, _ = parse_input(sys.argv[1])
+
     else:
         try:
             start_from = int(sys.argv[2]) - 1
         except:
             start_from = 0
-        tracks = parse_input(sys.argv[1], start_from)
+        tracks, _ = parse_input(sys.argv[1], start_from)
 
     print("Ripping {} tracks.".format(len(tracks)))
     for track in tracks:
