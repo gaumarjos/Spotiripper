@@ -3,13 +3,13 @@
 # Remember to install pyenv Python with
 # env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.10.0
 
-#lib_location="~/.pyenv/versions/3.6.5/envs/spotiripper_3.6.5/lib/python3.6/site-packages/"
 lib_location=~/.pyenv/versions/3.10.0/envs/spotiripper_3.10/lib/python3.10/site-packages/
 
 # Build
 clear
 echo "lib_location:" $lib_location
 rm -rf build dist
+rm spotiripper.spec
 
 pyinstaller --noconfirm --log-level=WARN --clean --onefile --windowed \
   --name Spotiripper \

@@ -1,14 +1,3 @@
-'''
-DOCUMENTATION
-https://bartsimons.me/ripping-spotify-songs-on-macos/
-https://spotipy.readthedocs.io/en/2.19.0/
-https://github.com/skybjohnson/spotipy_examples/blob/master/playlist_tracks_and_genre.py
-https://stackoverflow.com/questions/53761033/pydub-play-audio-from-variable
-https://betterprogramming.pub/simple-audio-processing-in-python-with-pydub-c3a217dabf11
-
-https://gist.github.com/zfarbp/581ce7e50a1b5740b4d31f007cac87fb
-'''
-
 import os
 import sys
 import traceback
@@ -18,7 +7,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 from ripper import Ripper
 
-VERSION = "2022-02-16"
+VERSION = "2022-02-17"
 DRYRUN = False
 PYSIDE_VERSION = 2
 
@@ -33,7 +22,6 @@ elif PYSIDE_VERSION == 6:
     from PySide6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QIcon, QAction
     from PySide6.QtCore import Qt, QSize, QRunnable, Slot, Signal, QObject, QThreadPool
 
-
 MACOSRED = (236, 95, 93)
 MACOSORANGE = (232, 135, 58)
 MACOSYELLOW = (255, 200, 60)
@@ -46,6 +34,13 @@ MACOSDARK = (46, 46, 46)
 '''
 Generic functions
 '''
+
+if getattr(sys, 'frozen', False):
+    current_path = os.path.dirname(sys.executable)
+    print("Running as an executable: {}".format(current_path))
+else:
+    current_path = str(os.path.dirname(__file__))
+    print("Running as a script: {}".format(current_path))
 
 
 def help():
@@ -213,7 +208,6 @@ def main():
         return
     elif len(sys.argv) == 2:
         tracks, _ = parse_input(sys.argv[1])
-
     else:
         try:
             start_from = int(sys.argv[2]) - 1
@@ -221,10 +215,11 @@ def main():
             start_from = 0
         tracks, _ = parse_input(sys.argv[1], start_from)
 
-    print("Ripping {} tracks.".format(len(tracks)))
+    print("Ripping {} track{}.".format(len(tracks), "s" if len(tracks) > 1 else ""))
     for track in tracks:
         if not DRYRUN:
-            ripper = Ripper(rip_dir=settings["rip_dir"],
+            ripper = Ripper(current_path=current_path,
+                            rip_dir=settings["rip_dir"],
                             ripped_folder_structure=settings["ripped_folder_structure"])
             ripper.rip(convert_to_uri(track.rstrip()))
         else:
@@ -427,13 +422,13 @@ def main_gui():
         def execute_this_fn(self, progress_callback, soundbar_callback):
             tracks, error = parse_input(self.link_widget.text(), int(self.start_spinbox.value()) - 1)
             if error is None:
-                progress_callback.emit("Ripping {} tracks.".format(len(tracks)))
-
+                progress_callback.emit("Ripping {} track{}.".format(len(tracks), "s" if len(tracks) > 1 else ""))
                 for track in tracks:
                     # Load settings (in theory, they could have been changed in the meanwhile)
                     settings = settings_lib.load_settings()
                     if not DRYRUN:
-                        ripper = Ripper(rip_dir=settings["rip_dir"],
+                        ripper = Ripper(current_path=current_path,
+                                        rip_dir=settings["rip_dir"],
                                         ripped_folder_structure=settings["ripped_folder_structure"],
                                         gui=True,
                                         gui_progress_callback=progress_callback,
@@ -559,7 +554,7 @@ Main
 '''
 
 if __name__ == "__main__":
-    if not os.path.exists("settings.json"):
+    if not os.path.exists(os.path.join(current_path, "settings.json")):
         settings_lib.create_settings()
 
     if len(sys.argv) < 2:

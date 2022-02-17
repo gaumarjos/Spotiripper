@@ -39,11 +39,13 @@ def remove_bad_characters(s):
 
 class Ripper:
     def __init__(self,
+                 current_path,
                  rip_dir=os.path.expanduser('~') + '/Downloads/Ripped/',
                  ripped_folder_structure='flat',
                  gui=False,
                  gui_progress_callback=None,
                  gui_soundbar_callback=None):
+        self.current_path = current_path
         self.ripped_folder_structure = ripped_folder_structure
         self.rip_dir = rip_dir
         self.tmp_dir = self.rip_dir + '.tmp/'
@@ -68,7 +70,7 @@ class Ripper:
         self.gui_soundbar_callback = gui_soundbar_callback
 
     def rip(self, trackuri):
-        toprint = "Ripping track {}...".format(trackuri)
+        toprint = "Track uri: {}".format(trackuri)
         if self.gui:
             self.gui_progress_callback.emit(toprint)
         else:
@@ -121,7 +123,7 @@ class Ripper:
             artworkdata = None
 
         # Log to CSV
-        with open('log.csv', 'a') as logfile:
+        with open(os.path.join(self.current_path, "log.csv"), 'a') as logfile:
             log = csv.writer(logfile)
             log.writerow([trackuri, artist, track, album])
 
