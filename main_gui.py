@@ -6,8 +6,9 @@ import colorama
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 from ripper import Ripper
+import spotiripper_helper
 
-VERSION = "2022-02-17"
+VERSION = "2022-02-25"
 DRYRUN = False
 PYSIDE_VERSION = 2
 
@@ -22,217 +23,10 @@ elif PYSIDE_VERSION == 6:
     from PySide6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QIcon, QAction
     from PySide6.QtCore import Qt, QSize, QRunnable, Slot, Signal, QObject, QThreadPool
 
-MACOSRED = (236, 95, 93)
-MACOSORANGE = (232, 135, 58)
-MACOSYELLOW = (255, 200, 60)
-MACOSGREEN = (120, 183, 86)
-MACOSCYAN = (84, 153, 166)
-MACOSBLUE = (48, 123, 246)
-MACOSMAGENTA = (154, 86, 163)
-MACOSDARK = (46, 46, 46)
-
-'''
-Generic functions
-'''
-
-if getattr(sys, 'frozen', False):
-    current_path = os.path.dirname(sys.executable)
-    print("Running as an executable: {}".format(current_path))
-else:
-    current_path = str(os.path.dirname(__file__))
-    print("Running as a script: {}".format(current_path))
-
-
-def help():
-    print("Version: {}".format(VERSION))
-    print("Usage:")
-    print("    spotiripper <track URI>")
-    print("    spotiripper <track URL>")
-    print("    spotiripper <list.txt containing track URIs or URLs>")
-    print("    spotiripper <playlist URI>    (*)")
-    print("    spotiripper <playlist URL>    (*)")
-    print("    spotiripper <album URI>       (*)")
-    print("    spotiripper <album URL>       (*)")
-    print("    spotiripper <artist URI>      Downloads the artist's top 10 tracks. (*)")
-    print("    spotiripper <artist URL>      Downloads the artist's top 10 tracks. (*)")
-    print()
-    print("(*) Note: requires setting Spotify Client ID and Client Secret keys.")
-    print("    export SPOTIPY_CLIENT_ID='yourclientid'")
-    print("    export SPOTIPY_CLIENT_SECRET='yourclientsecret'")
-    return 1
-
-
-def convert_to_uri(s):
-    # It's already an URI
-    if s[:14] == "spotify:track:" or s[:17] == "spotify:playlist:":
-        return s
-    # It's a track URL and must be converted into a track URI
-    elif s[:31] == "https://open.spotify.com/track/":
-        return "spotify:track:" + s[31:53]
-    # It's a playlist URL and must be converted into a playlist URI
-    elif s[:34] == "https://open.spotify.com/playlist/":
-        return "spotify:playlist:" + s[34:56]
-    else:
-        return -1
-
-
-def verify_spotipy_client_credentials():
-    # First, check if credentials are stored somewhere
-    settings = settings_lib.load_settings()
-    spotipy_client_set = (settings["spotipy_client_id"] != "" and settings["spotipy_client_secret"] != "") or (
-            os.environ.get("SPOTIPY_CLIENT_ID") is not None and os.environ.get("SPOTIPY_CLIENT_SECRET") is not None)
-
-    if spotipy_client_set:
-        # Second, try to authenticate
-        # Try with those stored in settings first
-        try:
-            auth_manager = SpotifyClientCredentials(settings["spotipy_client_id"], settings["spotipy_client_secret"])
-            sp = spotipy.Spotify(auth_manager=auth_manager)
-            return sp
-        except:
-            # If they don't work, try with those in env variables
-            try:
-                auth_manager = SpotifyClientCredentials()
-                sp = spotipy.Spotify(auth_manager=auth_manager)
-                return sp
-            except:
-                return None
-    else:
-        return None
-
-
-def parse_input(link, start_from=0):
-    track_list = []
-    error = None
-
-    # A track URI or URL?
-    if link.startswith("spotify:track:") or link.startswith("https://open.spotify.com/track/"):
-        track_list = [link]
-
-    # A txt list with track URIs or URLs?
-    elif link.endswith(".txt"):
-        file = open(link)
-        track_list = file.readlines()
-        file.close()
-
-    # A playlist URI or URL?
-    elif link.startswith("spotify:playlist:") or link.startswith("https://open.spotify.com/playlist/"):
-        sp = verify_spotipy_client_credentials()
-        if sp is not None:
-            # Fetching tracks in the playlist
-            results = sp.playlist_items(link)
-            items = results['items']
-            while results['next']:
-                results = sp.next(results)
-                items.extend(results['items'])
-            uris = []
-            for item in items:
-                track = item['track']
-                uris.append(track['uri'])
-            track_list = uris
-        else:
-            track_list = []
-            error = 'spotipy_keys'
-
-    # An album URI or URL?
-    elif link.startswith("spotify:album:") or link.startswith("https://open.spotify.com/album/"):
-        sp = verify_spotipy_client_credentials()
-        if sp is not None:
-            # Fetching tracks in the album
-            results = sp.album_tracks(link)
-            items = results['items']
-            while results['next']:
-                results = sp.next(results)
-                items.extend(results['items'])
-            urls = []
-            for item in items:
-                track = item['external_urls']
-                urls.append(track['spotify'])
-            track_list = urls
-        else:
-            track_list = []
-            error = 'spotipy_keys'
-
-    # An artist URI or URL?
-    elif link.startswith("spotify:artist:") or link.startswith("https://open.spotify.com/artist/"):
-        sp = verify_spotipy_client_credentials()
-        if sp is not None:
-            # Fetching this artist's top tracks
-            results = sp.artist_top_tracks(link)
-            items = results['tracks']
-            urls = []
-            for item in items:
-                track = item['external_urls']
-                urls.append(track['spotify'])
-            track_list = urls
-        else:
-            track_list = []
-            error = 'spotipy_keys'
-
-    else:
-        track_list = []
-        error = 'unknown_input'
-
-    if start_from == 0:
-        return track_list, error
-    else:
-        return track_list[start_from:], error
-
-
-def resource_path(path):
-    # Needed only is the path is relative
-    if not os.path.isabs(path):
-        if hasattr(sys, '_MEIPASS'):
-            return os.path.join(sys._MEIPASS, path)
-        return os.path.join(os.path.abspath('.'), path)
-    else:
-        return path
-
-
-'''
-Command-line version
-'''
+current_path = spotiripper_helper.get_current_path()
 
 
 def main():
-    colorama.init()
-    if not os.environ.get('PYTHONIOENCODING'):
-        os.environ['PYTHONIOENCODING'] = str("utf-8")
-
-    # Load settings
-    settings = settings_lib.load_settings()
-
-    # Understand what the command line input is
-    if len(sys.argv) < 2:
-        help()
-        return
-    elif len(sys.argv) == 2:
-        tracks, _ = parse_input(sys.argv[1])
-    else:
-        try:
-            start_from = int(sys.argv[2]) - 1
-        except:
-            start_from = 0
-        tracks, _ = parse_input(sys.argv[1], start_from)
-
-    print("Ripping {} track{}.".format(len(tracks), "s" if len(tracks) > 1 else ""))
-    for track in tracks:
-        if not DRYRUN:
-            ripper = Ripper(current_path=current_path,
-                            rip_dir=settings["rip_dir"],
-                            ripped_folder_structure=settings["ripped_folder_structure"])
-            ripper.rip(convert_to_uri(track.rstrip()))
-        else:
-            print(track)
-    return
-
-
-'''
-GUI version
-'''
-
-
-def main_gui():
     class WorkerSignals(QObject):
         '''
         Defines the signals available from a running worker thread.
@@ -308,15 +102,19 @@ def main_gui():
             super(Highlighter, self).__init__(parent)
             self.trackFormat = QTextCharFormat()
             self.trackFormat.setForeground(Qt.white)
-            self.trackFormat.setBackground(QColor(MACOSGREEN[0], MACOSGREEN[1], MACOSGREEN[2]))
+            self.trackFormat.setBackground(QColor(spotiripper_helper.MACOSGREEN[0], spotiripper_helper.MACOSGREEN[1],
+                                                  spotiripper_helper.MACOSGREEN[2]))
 
             self.warningFormat = QTextCharFormat()
             self.warningFormat.setForeground(Qt.black)
-            self.warningFormat.setBackground(QColor(MACOSYELLOW[0], MACOSYELLOW[1], MACOSYELLOW[2]))
+            self.warningFormat.setBackground(
+                QColor(spotiripper_helper.MACOSYELLOW[0], spotiripper_helper.MACOSYELLOW[1],
+                       spotiripper_helper.MACOSYELLOW[2]))
 
             self.errorFormat = QTextCharFormat()
             self.errorFormat.setForeground(Qt.white)
-            self.errorFormat.setBackground(QColor(MACOSRED[0], MACOSRED[1], MACOSRED[2]))
+            self.errorFormat.setBackground(
+                QColor(spotiripper_helper.MACOSRED[0], spotiripper_helper.MACOSRED[1], spotiripper_helper.MACOSRED[2]))
 
         def highlightBlock(self, text):
             if text.startswith('Track'):
@@ -346,7 +144,7 @@ def main_gui():
 
             self.setFixedSize(QSize(window_w, window_h))
             self.setWindowTitle("Spotiripper" + " " + VERSION)
-            app.setWindowIcon(QIcon(resource_path('spotiripper.png')))
+            app.setWindowIcon(QIcon(spotiripper_helper.resource_path('spotiripper.png')))
 
             self.link_widget = QLineEdit(self)
             self.link_widget.setAlignment(Qt.AlignCenter)
@@ -380,7 +178,8 @@ def main_gui():
             self.detail_widget.setReadOnly(True)
             self.detail_widget.setText("")
             self.detail_widget.setGeometry(margin, 3 * margin + 2 * link_h, margin + link_w + button_w, detail_h)
-            self.detail_widget.setStyleSheet("background-color: rgb{}; color: rgb(255,255,255);".format(str(MACOSDARK)))
+            self.detail_widget.setStyleSheet(
+                "background-color: rgb{}; color: rgb(255,255,255);".format(str(spotiripper_helper.MACOSDARK)))
 
             self.soundbar = QProgressBar(self)
             self.soundbar.setValue(0)
@@ -420,7 +219,7 @@ def main_gui():
             self.volume.setText("{:4.2f}/{:4.2f}".format(x, self.max_volume))
 
         def execute_this_fn(self, progress_callback, soundbar_callback):
-            tracks, error = parse_input(self.link_widget.text(), int(self.start_spinbox.value()) - 1)
+            tracks, error = spotiripper_helper.parse_input(self.link_widget.text(), int(self.start_spinbox.value()) - 1)
             if error is None:
                 progress_callback.emit("Ripping {} track{}.".format(len(tracks), "s" if len(tracks) > 1 else ""))
                 for track in tracks:
@@ -434,7 +233,7 @@ def main_gui():
                                         gui_progress_callback=progress_callback,
                                         gui_soundbar_callback=soundbar_callback)
                         self.max_volume = 0.0
-                        ripper.rip(convert_to_uri(track.rstrip()))
+                        ripper.rip(spotiripper_helper.convert_to_uri(track.rstrip()))
                     else:
                         progress_callback.emit(track)
 
@@ -549,15 +348,7 @@ def main_gui():
         sys.exit(app.exec())
 
 
-'''
-Main
-'''
-
 if __name__ == "__main__":
     if not os.path.exists(os.path.join(current_path, "settings.json")):
         settings_lib.create_settings()
-
-    if len(sys.argv) < 2:
-        main_gui()
-    else:
-        main()
+    main()

@@ -24,7 +24,7 @@ pyinstaller --noconfirm --log-level=WARN --clean --onefile --windowed \
   --hidden-import PySide2.QtCore \
   --hidden-import numpy \
   --debug imports \
-  spotiripper.py
+  main_gui.py
 
 # --hidden-import plyer.platforms.macosx.notification \
 
