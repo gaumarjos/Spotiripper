@@ -4,14 +4,10 @@
 
 [Latest build](dist/spotiripper), developed with Python 3.9.7 and built on MacOS 12.0.1.
 
-## Usage GUI    
-
-This should be pretty straightforward.
-
 ## Usage command line
 
-    spotiripper <track URI>")
-    spotiripper <track URL>")
+    spotiripper <track URI>
+    spotiripper <track URL>
     spotiripper <list.txt containing track URIs or URLs>
     spotiripper <playlist URI>    (*)
     spotiripper <playlist URL>    (*)
@@ -35,11 +31,18 @@ export SPOTIPY_CLIENT_SECRET='yourclientsecret'
 The first line makes sure you do not get the `UnicodeEncodeError` because the terminal cannot display some accented
 character or the sound bar. The other two are described below in "External dependencies"
 
+## Usage GUI
+
+Not recommended, but it's there.
+
 ## External dependencies
 
 ### Spotify
 
 It is better to use a paid account to get rid of ads that otherwise might be recorded.
+
+Make sure "autoplay" is deactivated in the Settings. Otherwise, another random song is played after the one requested
+and it might end up being recorded.
 
 To download tracks (or a list or tracks) nothing more is necessary.
 
@@ -68,7 +71,7 @@ random: `||PaMacCore (AUHAL)|| Error on line 2500: err='-10863', msg=Audio Unit:
 
 Make sure the volume slider in BlackHole is set to 1.0 (0.0dB) not to have an attenuated recording.
 
-## Bugs
+## Known bugs
 
 Both pyaudio and sounddevice, sometimes, although the input device is set correctly to blackhole, pstart recording from
 the microphone and then crash when attempting to close the stream.

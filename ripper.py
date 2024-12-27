@@ -93,12 +93,16 @@ class Ripper:
                                 gui_soundbar_callback=self.gui_soundbar_callback)
         # self.recfile.getinfo()
 
-        self.recfile.start_recording()
+        # RECORDING USED TO BE HERE
+        # self.recfile.start_recording()
 
         # Tell Spotify to play a specified song
         subprocess.Popen(
             'osascript -e "tell application \\"Spotify\\"" -e "play track \\"' + trackuri + '\\"" -e "end tell"',
             shell=True, stdout=subprocess.PIPE).stdout.read()
+
+        # RECORDING MOVED HERE
+        self.recfile.start_recording()
 
         time.sleep(1)
 
