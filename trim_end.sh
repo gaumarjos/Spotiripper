@@ -28,10 +28,11 @@ if (( $(echo "$new_duration <= 0" | bc -l) )); then
     exit 1
 fi
 
-# Define output filename with "_trimmed" suffix
-output_file="${input_file%.mp3}_trimmed.mp3"
+# Rename input file. The output file will have the same name of the input file.
+renamed_input_file="${input_file%.mp3}_old.mp3"
+mv $input_file $renamed_input_file
 
-# Trim the last specified seconds and create the new output file
-ffmpeg -i "$input_file" -to "$new_duration" -c copy "$output_file"
+# Trim the last specified seconds and create the new output file (which is named "input_file")
+ffmpeg -i "$renamed_input_file" -to "$new_duration" -c copy "$input_file"
 
-echo "Trimmed file created: $output_file"
+echo "Trimmed file created: $input_file, original renamed: $renamed_input_file"
