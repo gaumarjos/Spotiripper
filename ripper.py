@@ -6,6 +6,7 @@ from urllib.request import urlopen
 import eyed3
 import colorama
 import csv
+import spotiripper_helper
 # from converter_ffmpeg import convert_to_mp3
 from converter_pydub import convert_to_mp3
 # from recorder_pyaudio import Recorder
@@ -113,6 +114,12 @@ class Ripper:
         track = subprocess.Popen(
             'osascript -e "tell application \\"Spotify\\"" -e "current track\'s name" -e "end tell"',
             shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
+
+        # in ms
+        track_duration = int(subprocess.Popen(
+            'osascript -e "tell application \\"Spotify\\"" -e "current track\'s duration" -e "end tell"',
+            shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n'))
+
         album = subprocess.Popen(
             'osascript -e "tell application \\"Spotify\\"" -e "current track\'s album" -e "end tell"',
             shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
@@ -132,7 +139,7 @@ class Ripper:
             log.writerow([trackuri, artist, track, album])
 
         # Print artist and track names extracted from Spotify
-        toprint = "Track: {}, {}".format(artist, track)
+        toprint = "Track: {}, {} ({})".format(artist, track, spotiripper_helper.ms2str(track_duration))
         if self.gui:
             self.gui_progress_callback.emit(toprint)
         else:
@@ -149,6 +156,14 @@ class Ripper:
                 print(colorama.Fore.LIGHTYELLOW_EX,
                       "The song name contains accented characters that cannot be displayed correctly. Make sure you set \"export PYTHONIOENCODING=utf-8\".",
                       colorama.Style.RESET_ALL)
+
+        # Sometimes, Spotify does not stop. It's not clear to me if it does with some albums and not with others, but
+        # the fact is that sometimes it goes on playing the next song. Therefore, Spotiripper cannot detect the end and
+        # keeps on recording. It also doesn't launch the next song.
+        # I know the track's duration, so I could record for a definite amount opf time and then tell Spotify to stop.
+        # This might be a bit risky if the timer doesn't work correctly so the logic could be: could be used as a
+        # Check if it stops by itelf
+        # If it doesn't and the threshold is reached, force stop.
 
         # Check every 500ms if Spotify has stopped playing
         while subprocess.Popen('osascript -e "tell application \\"Spotify\\"" -e "player state" -e "end tell"',

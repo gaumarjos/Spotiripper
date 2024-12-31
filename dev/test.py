@@ -1,14 +1,16 @@
+import spotiripper_helper
+
 s = str("ciao è!")
 print(s)
 
 
 import os
 
+print(spotiripper_helper.ms2str(209040))
 
 
-
-if not os.environ.get('PYTHONIOENCODING'):
-    os.environ['PYTHONIOENCODING'] = str("utf-8")
+#if not os.environ.get('PYTHONIOENCODING'):
+#    os.environ['PYTHONIOENCODING'] = str("utf-8")
 
 
 

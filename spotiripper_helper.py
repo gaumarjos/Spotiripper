@@ -167,3 +167,17 @@ def resource_path(path):
         return os.path.join(os.path.abspath('build'), path)
     else:
         return path
+
+
+def ms2str(ms):
+    # Calculate total seconds and milliseconds
+    total_seconds = ms // 1000
+    milliseconds = ms % 1000
+
+    # Calculate minutes and seconds
+    minutes = total_seconds // 60
+    seconds = total_seconds % 60
+
+    # Format the string as mm:ss.ms
+    formatted_length = f"{minutes:02}:{seconds:02}.{milliseconds:03}"
+    return formatted_length
