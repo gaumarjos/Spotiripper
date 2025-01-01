@@ -72,6 +72,15 @@ class Ripper:
         self.gui_progress_callback = gui_progress_callback
         self.gui_soundbar_callback = gui_soundbar_callback
 
+        # Track info
+        self.info_title = None
+        self.info_artist = None
+        self.info_album = None
+        self.info_disc_nr = None
+        self.info_track_nr = None
+        self.info_album_artist = None
+        self.info_artworkdata = None
+
     # Function to be called when the timer expires
     def timer_expired(self):
         # Tell Spotify to pause
@@ -93,6 +102,15 @@ class Ripper:
     # Function to check the above condition at intervals
     def check_condition_with_intervals(self, timer, interval, total_duration):
         for _ in range(int(total_duration / interval)):
+
+            # Monitor progress. For some reason, even though the interval time is set to 0.5, the measured average is
+            # 0.85 with a minimal jitter.
+            '''
+            progress_duration = subprocess.Popen(
+                'osascript -e "tell application \\"Spotify\\"" -e "player position" -e "end tell"',
+                shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
+            '''
+
             if self.check_condition():
                 # print("Condition met! Continuing without waiting for the timer.")
                 timer.cancel()  # Cancel the timer if the condition is met
@@ -257,13 +275,16 @@ class Ripper:
         '''
 
         # Timer solution (solution 2)
-        # timer.join()
+        '''
+        timer.join()
+        '''
 
         # Timer and polling solution together (solution 3)
         # It polls the spotify app to check if the track is still playing. When the duration of the track is reached,
         # though, it stops recording in any case. This implementation is both responsive to pausing the track or to an
         # early finish and protected against Spotify's tendency to play tracks back to back without interruption.
-        if not self.check_condition_with_intervals(timer, 0.5, track_duration / 1000.0 - 1.0):
+        if not self.check_condition_with_intervals(timer=timer, interval=0.5,
+                                                   total_duration=track_duration / 1000.0 - 1.0):
             # Wait for the timer to finish if condition was not met
             timer.join()
 
@@ -286,18 +307,6 @@ class Ripper:
 
         # Set and/or update ID3 information
         self.tag()
-
-        '''
-        mp3file = eyed3.load(self.tmp_dir + self.tmp_mp3)
-        if artworkdata is not None:
-            mp3file.tag.images.set(3, artworkdata, "image/jpeg", track)
-        mp3file.tag.title = track
-        mp3file.tag.artist = artist
-        mp3file.tag.album = album
-        mp3file.tag.album_artist = album_artist
-        mp3file.tag.track_num = track_nr
-        mp3file.tag.save()
-        '''
 
         # Move to final location
         destination_filename = self.rip_dir + remove_bad_characters(self.info_artist) + ", " + remove_bad_characters(

@@ -1,22 +1,22 @@
 
 # read-only
-osascript -e 'tell application "Spotify" to player state'                  # stopped,playing,paused
+    osascript -e 'tell application "Spotify" to player state'                  # stopped,playing,paused
 osascript -e 'tell application "Spotify" to current track'                 # The current playing track.
-osascript -e 'tell application "Spotify" to artwork of current track'      # Image data in TIFF format.
-osascript -e 'tell application "Spotify" to artist of current track'       # The artist of the track.
-osascript -e 'tell application "Spotify" to album of current track'        # The album of the track.
-osascript -e 'tell application "Spotify" to disc number of current track'  # The disc number of the track.
-osascript -e 'tell application "Spotify" to duration of current track'     # The length of the track in seconds.
+    osascript -e 'tell application "Spotify" to artwork of current track'      # Image data in TIFF format.
+    osascript -e 'tell application "Spotify" to artist of current track'       # The artist of the track.
+    osascript -e 'tell application "Spotify" to album of current track'        # The album of the track.
+    osascript -e 'tell application "Spotify" to disc number of current track'  # The disc number of the track.
+    osascript -e 'tell application "Spotify" to duration of current track'     # The length of the track in seconds.
 osascript -e 'tell application "Spotify" to played count of current track' # The number of times this track has been played.
-osascript -e 'tell application "Spotify" to track number of current track' # The index of the track in its album.
+    osascript -e 'tell application "Spotify" to track number of current track' # The index of the track in its album.
 osascript -e 'tell application "Spotify" to starred of current track'      # Is the track starred?
 osascript -e 'tell application "Spotify" to popularity of current track'   # How popular is this track? 0-100
 osascript -e 'tell application "Spotify" to id of current track'           # The ID of the item.
-osascript -e 'tell application "Spotify" to name of current track'         # The name of the track.
-osascript -e 'tell application "Spotify" to artwork of current track'      # The track s album cover.
-osascript -e 'tell application "Spotify" to album artist of current track' # That album artist of the track.
+    osascript -e 'tell application "Spotify" to name of current track'         # The name of the track.
+    osascript -e 'tell application "Spotify" to artwork of current track'      # The track s album cover.
+    osascript -e 'tell application "Spotify" to album artist of current track' # That album artist of the track.
 osascript -e 'tell application "Spotify" to spotify url of current track'  # The URL of the track.
-osascript -e 'tell application "Spotify" to player position'               # Position of current track.
+    osascript -e 'tell application "Spotify" to player position'               # Position of current track.
 
 # read/write
 osascript -e 'tell application "Spotify" to player position'   # The player s position within the currently playing track in seconds.
