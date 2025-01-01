@@ -20,20 +20,9 @@
         export SPOTIPY_CLIENT_ID='yourclientid'")
         export SPOTIPY_CLIENT_SECRET='yourclientsecret'")
 
-To avoid getting errors, add these lines to `~/.zshrc`, with `nano ~/.zshrc` for example:
-
-````
-export LANG="en_US.UTF-8"
-export SPOTIPY_CLIENT_ID='yourclientid'
-export SPOTIPY_CLIENT_SECRET='yourclientsecret'
-````
-
-The first line makes sure you do not get the `UnicodeEncodeError` because the terminal cannot display some accented
-character or the sound bar. The other two are described below in "External dependencies"
-
 ## Usage GUI
 
-Not recommended, but it's there.
+Not recommended and not really maintained anymore, but it's there.
 
 ## External dependencies
 
@@ -48,12 +37,18 @@ To download tracks (or a list or tracks) nothing more is necessary.
 
 To download playlists, albums and artist's top tracks `spotiripper` needs to access the Spotify database to know what
 tracks they contain. To do so, it is necessary to setup Client ID and Client Secret keys. They can be obtained
-from [here](https://developer.spotify.com/dashboard/applications) and the keys can be set with:
+from [here](https://developer.spotify.com/dashboard/applications) and the keys can be set permanently to `~/.zshrc`
+with:
 
 ````
-export SPOTIPY_CLIENT_ID='yourclientid'
-export SPOTIPY_CLIENT_SECRET='yourclientsecret'
+echo "export LANG=\"en_US.UTF-8\"" >> ~/.zshrc
+echo "export SPOTIPY_CLIENT_ID='yourclientid'" >> ~/.zshrc
+echo "export SPOTIPY_CLIENT_SECRET='yourclientsecret'" >> ~/.zshrc
 ````
+
+The first line makes sure you do not get the `UnicodeEncodeError` because the terminal cannot display some accented
+character or the sound bar.
+
 
 ### Blackhole
 
