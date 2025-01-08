@@ -11,4 +11,4 @@ arg1=$1
 arg2=${2:-""}
 
 cd ~/PycharmProjects/Spotiripper/
-python main_cli.py $arg1 $arg2
+python main.py $arg1 $arg2
