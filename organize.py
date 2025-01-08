@@ -7,12 +7,7 @@ from mutagen.mp3 import MP3
 from mutagen.easyid3 import EasyID3
 import settings_lib
 
-
-def organize(mp3_file, library_folder):
-    """Process the MP3 file name."""
-    print(f"Organizing: {mp3_file}")
-    copy_and_organize_mp3(mp3_file, library_folder)
-
+DRYRUN = False
 
 def list_mp3_files(file_folder, library_folder):
     """List all MP3 files in the given folder."""
@@ -34,13 +29,13 @@ def read_mp3_tags(file_path):
         audio = MP3(file_path, ID3=EasyID3)
 
         # Extract the desired tags
-        author = audio.get('artist', ["Unknown"])[0]  # Get artist name
-        album = audio.get('album', ["Unknown"])[0]  # Get album name
-        title = audio.get('title', ["Unknown"])[0]  # Get title
+        author = audio.get('artist', ["Unknown Artist"])[0]  # Get artist name
+        album = audio.get('album', ["Unknown Album"])[0]  # Get album name
+        title = audio.get('title', ["Untitled"])[0]  # Get title
 
         # Get track number and disc number, return empty string if not found
-        track_number = audio.get('tracknumber', [""])[0] if audio.get('tracknumber') else ""
-        disc_number = audio.get('discnumber', [""])[0] if audio.get('discnumber') else ""
+        track_number = audio.get('tracknumber', [None])[0]
+        disc_number = audio.get('discnumber', [None])[0]
 
         return {
             "author": author,
@@ -55,15 +50,17 @@ def read_mp3_tags(file_path):
         return None
 
 
-def copy_and_organize_mp3(original_file_path, library_folder):
+def organize(original_file_path, library_folder):
     """Copy MP3 file to a structured folder based on author and album."""
+    print(f"Organizing: {original_file_path}")
+
     # Extract tags
     tags = read_mp3_tags(original_file_path)
-    author = tags.get("author", "Unknown Artist")
-    album = tags.get("album", "Unknown Album")
-    title = tags.get("title", "Untitled")
-    track_number = tags.get("track_number", "").strip()  # Remove any extra spaces
-    disc_number = tags.get("disc_number", "").strip()  # Remove any extra spaces
+    author = tags.get("author")
+    album = tags.get("album")
+    title = tags.get("title")
+    track_number = tags.get("track_number")
+    disc_number = tags.get("disc_number")
 
     # Create the directory structure: library_folder/author/album
     target_folder = os.path.join(library_folder, author, album)
@@ -72,7 +69,16 @@ def copy_and_organize_mp3(original_file_path, library_folder):
     os.makedirs(target_folder, exist_ok=True)
 
     # Construct the new filename
-    new_filename = f"{disc_number}.{track_number} {title}.mp3".strip()
+    if track_number is None:
+        new_filename = f"{title}.mp3".strip()
+        # print("No track number")
+    elif disc_number is None:
+        new_filename = f"{track_number} {title}.mp3".strip()
+        # print("Track number but no disc number")
+    else:
+        new_filename = f"{disc_number}.{track_number} {title}.mp3".strip()
+        # print("Both disc and track number")
+    assert new_filename[0] != '.'
 
     # Full path for the new file
     new_file_path = os.path.join(target_folder, new_filename)
@@ -90,7 +96,8 @@ def copy_and_organize_mp3(original_file_path, library_folder):
 
     # Copy the original MP3 file to the new location with the new name
     # shutil.copy2(original_file_path, new_file_path)
-    shutil.move(original_file_path, new_file_path)
+    if not DRYRUN:
+        shutil.move(original_file_path, new_file_path)
 
     print(f" Moved to '{new_file_path}'")
 
