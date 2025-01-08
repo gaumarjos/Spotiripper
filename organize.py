@@ -111,7 +111,7 @@ def main():
     args = parser.parse_args()
 
     # Organizing
-    list_mp3_files(args.file_folder, args.library_folder)
+    list_mp3_files(args.source_folder, args.library_folder)
 
 
 if __name__ == "__main__":
