@@ -144,7 +144,7 @@ def main():
 
             self.setFixedSize(QSize(window_w, window_h))
             self.setWindowTitle("Spotiripper" + " " + VERSION)
-            app.setWindowIcon(QIcon(spotiripper_helper.resource_path('spotiripper.png')))
+            app.setWindowIcon(QIcon(spotiripper_helper.resource_path('../spotiripper.png')))
 
             self.link_widget = QLineEdit(self)
             self.link_widget.setAlignment(Qt.AlignCenter)
@@ -349,6 +349,6 @@ def main():
 
 
 if __name__ == "__main__":
-    if not os.path.exists(os.path.join(current_path, "settings.json")):
+    if not os.path.exists(os.path.join(current_path, "../settings.json")):
         settings_lib.create_settings()
     main()

@@ -2,7 +2,7 @@
 .idea/
 .eggs/
 log.csv
-spotiripper.spec
+old/Spotiripper.spec
 build/
 dist/
 tmp/
