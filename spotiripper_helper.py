@@ -24,24 +24,6 @@ def get_current_path():
     return current_path
 
 
-def help():
-    print("Usage:")
-    print("    spotiripper <track URI>")
-    print("    spotiripper <track URL>")
-    print("    spotiripper <list.txt containing track URIs or URLs>")
-    print("    spotiripper <playlist URI>    (*)")
-    print("    spotiripper <playlist URL>    (*)")
-    print("    spotiripper <album URI>       (*)")
-    print("    spotiripper <album URL>       (*)")
-    print("    spotiripper <artist URI>      Downloads the artist's top 10 tracks. (*)")
-    print("    spotiripper <artist URL>      Downloads the artist's top 10 tracks. (*)")
-    print()
-    print("(*) Note: requires setting Spotify Client ID and Client Secret keys.")
-    print("    export SPOTIPY_CLIENT_ID='yourclientid'")
-    print("    export SPOTIPY_CLIENT_SECRET='yourclientsecret'")
-    return 1
-
-
 def convert_to_uri(s):
     # It's already an URI
     if s[:14] == "spotify:track:" or s[:17] == "spotify:playlist:":
