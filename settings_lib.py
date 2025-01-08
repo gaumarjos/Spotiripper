@@ -6,7 +6,8 @@ def create_settings():
         "rip_dir": os.path.expanduser('~') + '/Downloads/Ripped/',
         "ripped_folder_structure": "flat",
         "spotipy_client_id": "",
-        "spotipy_client_secret": ""
+        "spotipy_client_secret": "",
+        "lib_dir": os.path.expanduser('~') + '/Music/Discoteca/'
     }
     json_data = json.dumps(settings, indent=4)
     with open("settings.json", "w") as outfile:

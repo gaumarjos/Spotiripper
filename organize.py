@@ -5,6 +5,7 @@ import colorama
 from datetime import datetime
 from mutagen.mp3 import MP3
 from mutagen.easyid3 import EasyID3
+import settings_lib
 
 
 def organize(mp3_file, library_folder):
@@ -94,10 +95,17 @@ def copy_and_organize_mp3(original_file_path, library_folder):
 
 
 def main():
+    settings = settings_lib.load_settings()
+    rip_dir = settings["rip_dir"]
+    lib_dir = settings["lib_dir"]
+
     # Set up argument parsing
-    parser = argparse.ArgumentParser(description="Process two folders.")
-    parser.add_argument('file_folder', type=str, help='The first folder containing MP3 files.')
-    parser.add_argument('library_folder', type=str, help='The second folder (no processing).')
+    parser = argparse.ArgumentParser(
+        description="Organize the MP3 files ripped moving them into the user's music library.")
+    parser.add_argument('-s', '--source_folder', type=str, default=rip_dir,
+                        help='The folder containing MP3 files (default: lib_dir specified in settings.json).')
+    parser.add_argument('-l', '--library_folder', type=str, default=lib_dir,
+                        help='The music library folder (default: lib_dir specified in settings.json).')
 
     # Parse arguments
     args = parser.parse_args()
