@@ -1,28 +1,38 @@
 # Spotiripper
 
-## Download
+## Usage
 
-[Latest build](dist/spotiripper), developed with Python 3.9.7 and built on MacOS 12.0.1.
+For the sake of speed, it's recommended to the scripts in python directly rather than building them.
 
-## Usage command line
+### Spotiripper
+The actual script recording music.
 
-    spotiripper <track URI>
-    spotiripper <track URL>
-    spotiripper <list.txt containing track URIs or URLs>
-    spotiripper <playlist URI>    (*)
-    spotiripper <playlist URL>    (*)
-    spotiripper <album URI>       (*)
-    spotiripper <album URL>       (*)
-    spotiripper <artist URI>      Downloads the artist's top 10 tracks. (*)
-    spotiripper <artist URL>      Downloads the artist's top 10 tracks. (*)
+    python main.py <track URI>
+    python main.py <track URL>
+    python main.py <list.txt containing track URIs or URLs>
+    python main.py <playlist URI>    (*)
+    python main.py <playlist URL>    (*)
+    python main.py <album URI>       (*)
+    python main.py <album URL>       (*)
+    python main.py <artist URI>      Downloads the artist's top 10 tracks. (*)
+    python main.py <artist URL>      Downloads the artist's top 10 tracks. (*)
 
     (*) Note: requires setting Spotify Client ID and Client Secret keys.")
         export SPOTIPY_CLIENT_ID='yourclientid'")
         export SPOTIPY_CLIENT_SECRET='yourclientsecret'")
 
-## Usage GUI
+### Organizer
+Move recorded files into an existing library structured hierarchically as Artist > Album > Track. 
 
-Not recommended and not really maintained anymore, but it's there.
+    python organize.py -s <where_the_MP3_files_are> -l <library's parent folder>
+
+
+### Waveform
+Show the waveform of the first seconds of an MP3 file, this helps finding out how much to trim in case loud noises are
+recorded at the beginning of the file.
+
+    python waveform.py <track.mp3>
+
 
 ## External dependencies
 
