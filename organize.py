@@ -89,9 +89,10 @@ def copy_and_organize_mp3(original_file_path, library_folder):
         new_file_path = os.path.join(target_folder, new_filename)
 
     # Copy the original MP3 file to the new location with the new name
-    shutil.copy2(original_file_path, new_file_path)
+    # shutil.copy2(original_file_path, new_file_path)
+    shutil.move(original_file_path, new_file_path)
 
-    print(f" Copied to '{new_file_path}'")
+    print(f" Moved to '{new_file_path}'")
 
 
 def main():
