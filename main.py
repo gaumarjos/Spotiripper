@@ -10,7 +10,7 @@ from ripper import Ripper
 import spotiripper_helper
 
 VERSION = "2025-01-08"
-DRYRUN = True
+DRYRUN = False
 
 current_path = spotiripper_helper.get_current_path()
 

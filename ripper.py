@@ -242,7 +242,7 @@ class Ripper:
             log.writerow([trackuri, self.info_artist, self.info_title, self.info_album])
 
         # Print artist and track names extracted from Spotify
-        toprint = "Track: {}, {} ({})".format(self.info_artist, self.info_title,
+        toprint = "{}, {}, {} ({})".format(self.info_artist, self.info_album, self.info_title,
                                               spotiripper_helper.ms2str(track_duration))
         if self.gui:
             self.gui_progress_callback.emit(toprint)
