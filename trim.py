@@ -7,13 +7,13 @@ import os
 import subprocess
 
 
-def plot_waveform(original_filename, duration=5):
+def plot_waveform(original_filename, duration=1):
     """Plots the waveform of an audio file for a specified duration and allows interaction."""
     # Load audio file
     signal, sample_rate = librosa.load(original_filename, sr=None)
 
     # Calculate the number of samples to plot based on the desired duration
-    max_samples = duration * sample_rate
+    max_samples = int(duration * sample_rate)
     signal_to_plot = signal[:max_samples]  # Take only the first 'duration' seconds
 
     # Create time array for the x-axis
@@ -39,7 +39,7 @@ def plot_waveform(original_filename, duration=5):
         if event.inaxes == ax and event.xdata is not None:  # Check if xdata is valid
             vline.set_xdata([event.xdata])
             text_box.set_position((event.xdata + 0.01, 0.8))  # Move textbox slightly right of the line
-            text_box.set_text(f'Click to trim at time {event.xdata:.2f} s')  # Custom text showing time
+            text_box.set_text(f'Click to trim at time {event.xdata:.3f} s')  # Custom text showing time
             fig.canvas.draw_idle()
 
     def on_click(event):
@@ -99,14 +99,15 @@ def plot_waveform(original_filename, duration=5):
 
 def main():
     # Set up argument parsing
-    parser = argparse.ArgumentParser(description="Show waveform of an MP3.")
+    parser = argparse.ArgumentParser(description="Show waveform of an MP3 and allows trimming the beginning of it.")
     parser.add_argument('file', type=str, help='The mp3 file.')
+    parser.add_argument('-d', '--duration', type=float, default=1.0, help='How many seconds to show. Default: 1.0.')
 
     # Parse arguments
     args = parser.parse_args()
 
     # Organizing
-    plot_waveform(args.file, 1)
+    plot_waveform(args.file, args.duration)
 
 
 if __name__ == "__main__":
