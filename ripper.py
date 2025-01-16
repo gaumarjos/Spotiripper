@@ -13,24 +13,7 @@ import spotiripper_helper
 from converter_pydub import convert_to_mp3
 # from recorder_pyaudio import Recorder
 from recorder_sounddevice import Recorder
-
-
-# from plyer import notification
-
-
-def push(title, message):
-    subprocess.Popen(
-        'osascript -e "display notification \\"' + message + '\\" with title \\"' + title + '\\""',
-        shell=True, stdout=subprocess.PIPE).stdout.read()
-
-    '''
-    notification.notify(
-        title=title,
-        message=message,
-        app_icon="spotiripper.png",
-        timeout=50
-    )
-    '''
+import player_macos
 
 
 def remove_bad_characters(s):
@@ -84,8 +67,7 @@ class Ripper:
     # Function to be called when the timer expires
     def timer_expired(self):
         # Tell Spotify to pause
-        subprocess.Popen('osascript -e "tell application \\"Spotify\\" to pause"', shell=True,
-                         stdout=subprocess.PIPE).stdout.read()
+        player_macos.pause()
 
     # Function to start the timer
     def start_timer(self, seconds):
@@ -95,9 +77,7 @@ class Ripper:
 
     # Function to check if the track has stopped playing
     def check_condition(self):
-        return not subprocess.Popen('osascript -e "tell application \\"Spotify\\"" -e "player state" -e "end tell"',
-                                    shell=True,
-                                    stdout=subprocess.PIPE).stdout.read() == b"playing\n"
+        return not player_macos.get_status()
 
     # Function to check the above condition at intervals
     def check_condition_with_intervals(self, timer, interval, total_duration):
@@ -105,11 +85,6 @@ class Ripper:
 
             # Monitor progress. For some reason, even though the interval time is set to 0.5, the measured average is
             # 0.85 with a minimal jitter.
-            '''
-            progress_duration = subprocess.Popen(
-                'osascript -e "tell application \\"Spotify\\"" -e "player position" -e "end tell"',
-                shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
-            '''
 
             if self.check_condition():
                 # print("Condition met! Continuing without waiting for the timer.")
@@ -173,8 +148,7 @@ class Ripper:
             os.remove(os.path.join(self.tmp_dir, f))
 
         # Tell Spotify to pause
-        subprocess.Popen('osascript -e "tell application \\"Spotify\\" to pause"', shell=True,
-                         stdout=subprocess.PIPE).stdout.read()
+        player_macos.pause()
         time.sleep(.300)
 
         # Start recorder
@@ -189,9 +163,7 @@ class Ripper:
         # self.recfile.start_recording()
 
         # Tell Spotify to play a specified song
-        subprocess.Popen(
-            'osascript -e "tell application \\"Spotify\\"" -e "play track \\"' + trackuri + '\\"" -e "end tell"',
-            shell=True, stdout=subprocess.PIPE).stdout.read()
+        player_macos.play(trackuri)
 
         # Start recording
         self.recfile.start_recording()
@@ -199,36 +171,20 @@ class Ripper:
         time.sleep(1.0)
 
         # Get track duration in ms asap
-        track_duration = int(subprocess.Popen(
-            'osascript -e "tell application \\"Spotify\\"" -e "current track\'s duration" -e "end tell"',
-            shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n'))
+        track_duration = int(player_macos.get_duration())
 
         # Start timer with the same duration of the song. TODO Verify if -1 is ok. Without, it seems 1s too long.
         timer = self.start_timer(track_duration / 1000. - 1.0)
         # timer = self.start_timer(10)
 
         # Get the artist name, track name, album name and album artwork URL from Spotify
-        self.info_title = subprocess.Popen(
-            'osascript -e "tell application \\"Spotify\\"" -e "current track\'s name" -e "end tell"',
-            shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
-        self.info_artist = subprocess.Popen(
-            'osascript -e "tell application \\"Spotify\\"" -e "current track\'s artist" -e "end tell"', shell=True,
-            stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
-        self.info_album = subprocess.Popen(
-            'osascript -e "tell application \\"Spotify\\"" -e "current track\'s album" -e "end tell"',
-            shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
-        artwork_url = subprocess.Popen(
-            'osascript -e "tell application \\"Spotify\\"" -e "current track\'s artwork url" -e "end tell"', shell=True,
-            stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
-        self.info_disc_nr = subprocess.Popen(
-            'osascript -e "tell application \\"Spotify\\"" -e "current track\'s disc number" -e "end tell"',
-            shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
-        self.info_track_nr = subprocess.Popen(
-            'osascript -e "tell application \\"Spotify\\"" -e "current track\'s track number" -e "end tell"',
-            shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
-        self.info_album_artist = subprocess.Popen(
-            'osascript -e "tell application \\"Spotify\\"" -e "current track\'s album artist" -e "end tell"',
-            shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
+        self.info_title = player_macos.get_title()
+        self.info_artist = player_macos.get_artist()
+        self.info_album = player_macos.get_album()
+        artwork_url = player_macos.get_artwork_url()
+        self.info_disc_nr = player_macos.get_disc_nr()
+        self.info_track_nr = player_macos.get_track_nr()
+        self.info_album_artist = player_macos.get_album_artist()
 
         # Added because this is sometimes empty (debug)
         if artwork_url is not None and len(artwork_url) > 0:
@@ -243,7 +199,7 @@ class Ripper:
 
         # Print artist and track names extracted from Spotify
         toprint = "{}, {}, {} ({})".format(self.info_artist, self.info_album, self.info_title,
-                                              spotiripper_helper.ms2str(track_duration))
+                                           spotiripper_helper.ms2str(track_duration))
         if self.gui:
             self.gui_progress_callback.emit(toprint)
         else:
@@ -251,7 +207,7 @@ class Ripper:
                 print(colorama.Back.LIGHTGREEN_EX,
                       toprint + (self.terminal_width - len(toprint) - 6) * ' ',
                       colorama.Style.RESET_ALL)
-                push("Start recording", toprint)
+                player_macos.push_notification("Start recording", toprint)
             except:
                 toprint = toprint.encode('ascii', 'replace')
                 print(colorama.Back.LIGHTGREEN_EX,
@@ -268,9 +224,7 @@ class Ripper:
 
         # Polling solution (solution 1)
         '''
-        while subprocess.Popen('osascript -e "tell application \\"Spotify\\"" -e "player state" -e "end tell"',
-                               shell=True,
-                               stdout=subprocess.PIPE).stdout.read() == b"playing\n":
+        while player_macos.get_status():
             time.sleep(.500)
         '''
 
@@ -290,12 +244,12 @@ class Ripper:
 
         # Spotify has stopped playing, stop recording
         self.recfile.stop_recording()
-        push("Stop recording", toprint)
+        player_macos.push_notification("Stop recording", toprint)
 
         # Convert to mp3 and notify if an error occurs
         if convert_to_mp3(self.tmp_dir + self.tmp_wav,
                           self.tmp_dir + self.tmp_mp3):
-            push("Converted", toprint)
+            player_macos.push_notification("Converted", toprint)
         else:
             toprint = "Error in conversion."
             if self.gui:

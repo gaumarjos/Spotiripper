@@ -1,4 +1,96 @@
+import subprocess
 
+# from plyer import notification
+
+
+'''
+notification.notify(
+    title=title,
+    message=message,
+    app_icon="spotiripper.png",
+    timeout=50
+)
+'''
+
+
+def push_notification(title, message):
+    subprocess.Popen(
+        'osascript -e "display notification \\"' + message + '\\" with title \\"' + title + '\\""',
+        shell=True, stdout=subprocess.PIPE).stdout.read()
+
+
+def pause():
+    subprocess.Popen('osascript -e "tell application \\"Spotify\\" to pause"', shell=True,
+                     stdout=subprocess.PIPE).stdout.read()
+
+
+def get_status():
+    return subprocess.Popen('osascript -e "tell application \\"Spotify\\"" -e "player state" -e "end tell"',
+                            shell=True,
+                            stdout=subprocess.PIPE).stdout.read() == b"playing\n"
+
+
+def play(trackuri):
+    subprocess.Popen(
+        'osascript -e "tell application \\"Spotify\\"" -e "play track \\"' + trackuri + '\\"" -e "end tell"',
+        shell=True, stdout=subprocess.PIPE).stdout.read()
+
+
+def get_duration():
+    return subprocess.Popen(
+        'osascript -e "tell application \\"Spotify\\"" -e "current track\'s duration" -e "end tell"',
+        shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
+
+
+def get_title():
+    return subprocess.Popen(
+        'osascript -e "tell application \\"Spotify\\"" -e "current track\'s name" -e "end tell"',
+        shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
+
+
+def get_artist():
+    return subprocess.Popen(
+        'osascript -e "tell application \\"Spotify\\"" -e "current track\'s artist" -e "end tell"', shell=True,
+        stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
+
+
+def get_album():
+    return subprocess.Popen(
+        'osascript -e "tell application \\"Spotify\\"" -e "current track\'s album" -e "end tell"',
+        shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
+
+
+def get_artwork_url():
+    return subprocess.Popen(
+        'osascript -e "tell application \\"Spotify\\"" -e "current track\'s artwork url" -e "end tell"', shell=True,
+        stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
+
+
+def get_disc_nr():
+    return subprocess.Popen(
+        'osascript -e "tell application \\"Spotify\\"" -e "current track\'s disc number" -e "end tell"',
+        shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
+
+
+def get_track_nr():
+    return subprocess.Popen(
+        'osascript -e "tell application \\"Spotify\\"" -e "current track\'s track number" -e "end tell"',
+        shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
+
+
+def get_album_artist():
+    return subprocess.Popen(
+        'osascript -e "tell application \\"Spotify\\"" -e "current track\'s album artist" -e "end tell"',
+        shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
+
+
+def get_played_duration():
+    return subprocess.Popen(
+        'osascript -e "tell application \\"Spotify\\"" -e "player position" -e "end tell"',
+        shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf-8').rstrip('\r\n')
+
+
+'''
 # read-only
     osascript -e 'tell application "Spotify" to player state'                  # stopped,playing,paused
 osascript -e 'tell application "Spotify" to current track'                 # The current playing track.
@@ -44,4 +136,6 @@ osascript -e 'tell application "Spotify" to name'      # The name of the applica
 osascript -e 'tell application "Spotify" to version'   # The version of the application.
 
 
-osascript -e 'tell application "Spotify" to quit'
+osascript -e 'tell application "Spotify" to quit' #
+
+'''
