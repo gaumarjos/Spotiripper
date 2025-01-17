@@ -1,23 +1,5 @@
 import subprocess
 
-# from plyer import notification
-
-
-'''
-notification.notify(
-    title=title,
-    message=message,
-    app_icon="spotiripper.png",
-    timeout=50
-)
-'''
-
-
-def push_notification(title, message):
-    subprocess.Popen(
-        'osascript -e "display notification \\"' + message + '\\" with title \\"' + title + '\\""',
-        shell=True, stdout=subprocess.PIPE).stdout.read()
-
 
 def pause():
     subprocess.Popen('osascript -e "tell application \\"Spotify\\" to pause"', shell=True,

@@ -14,6 +14,16 @@ from converter_pydub import convert_to_mp3
 # from recorder_pyaudio import Recorder
 from recorder_sounddevice import Recorder
 import player_macos
+import pync
+
+
+def push_notification(title, message):
+    '''
+    subprocess.Popen(
+        'osascript -e "display notification \\"' + message + '\\" with title \\"' + title + '\\""',
+        shell=True, stdout=subprocess.PIPE).stdout.read()
+    '''
+    pync.Notifier.notify(message, title=title, icon='icon.icns')
 
 
 def remove_bad_characters(s):
@@ -207,7 +217,7 @@ class Ripper:
                 print(colorama.Back.LIGHTGREEN_EX,
                       toprint + (self.terminal_width - len(toprint) - 6) * ' ',
                       colorama.Style.RESET_ALL)
-                player_macos.push_notification("Start recording", toprint)
+                push_notification("Start recording", toprint)
             except:
                 toprint = toprint.encode('ascii', 'replace')
                 print(colorama.Back.LIGHTGREEN_EX,
@@ -244,12 +254,12 @@ class Ripper:
 
         # Spotify has stopped playing, stop recording
         self.recfile.stop_recording()
-        player_macos.push_notification("Stop recording", toprint)
+        push_notification("Stop recording", toprint)
 
         # Convert to mp3 and notify if an error occurs
         if convert_to_mp3(self.tmp_dir + self.tmp_wav,
                           self.tmp_dir + self.tmp_mp3):
-            player_macos.push_notification("Converted", toprint)
+            push_notification("Converted", toprint)
         else:
             toprint = "Error in conversion."
             if self.gui:
