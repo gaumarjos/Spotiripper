@@ -1,18 +1,14 @@
 import os
-import sys
 import argparse
-import traceback
 import settings_lib
 import colorama
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
 from ripper import Ripper
-import spotiripper_helper
+import helper
 
 VERSION = "2025-01-17"
 DRYRUN = False
 
-current_path = spotiripper_helper.get_current_path()
+current_path = helper.get_current_path()
 
 
 def main():
@@ -38,7 +34,7 @@ def main():
 
     # Parse arguments
     args = parser.parse_args()
-    tracks, _ = spotiripper_helper.parse_input(args.link, args.start_from - 1)
+    tracks, _ = helper.parse_input(args.link, args.start_from - 1)
 
     print("Ripping {} track{}.".format(len(tracks), "s" if len(tracks) > 1 else ""))
     for track in tracks:
@@ -46,7 +42,7 @@ def main():
             ripper = Ripper(current_path=current_path,
                             rip_dir=settings["rip_dir"],
                             ripped_folder_structure=settings["ripped_folder_structure"])
-            ripper.rip(spotiripper_helper.convert_to_uri(track.rstrip()))
+            ripper.rip(helper.convert_to_uri(track.rstrip()))
         else:
             print(track)
     return

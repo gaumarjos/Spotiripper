@@ -1,4 +1,4 @@
-import spotiripper_helper
+import helper
 
 s = str("ciao è!")
 print(s)
@@ -6,7 +6,7 @@ print(s)
 
 import os
 
-print(spotiripper_helper.ms2str(209040))
+print(helper.ms2str(209040))
 
 
 #if not os.environ.get('PYTHONIOENCODING'):

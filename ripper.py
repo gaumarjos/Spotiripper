@@ -8,7 +8,7 @@ from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, TIT2, TPE1, TALB, TCON, TRCK, TDRC, TPOS, TPE2, APIC, COMM
 import colorama
 import csv
-import spotiripper_helper
+import helper
 # from converter_ffmpeg import convert_to_mp3
 from converter_pydub import convert_to_mp3
 # from recorder_pyaudio import Recorder
@@ -209,7 +209,7 @@ class Ripper:
 
         # Print artist and track names extracted from Spotify
         toprint = "{}, {}, {} ({})".format(self.info_artist, self.info_album, self.info_title,
-                                           spotiripper_helper.ms2str(track_duration))
+                                           helper.ms2str(track_duration))
         if self.gui:
             self.gui_progress_callback.emit(toprint)
         else:

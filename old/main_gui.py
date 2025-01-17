@@ -6,7 +6,7 @@ import colorama
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 from ripper import Ripper
-import spotiripper_helper
+import helper
 
 VERSION = "2022-02-25"
 DRYRUN = False
@@ -23,7 +23,7 @@ elif PYSIDE_VERSION == 6:
     from PySide6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QIcon, QAction
     from PySide6.QtCore import Qt, QSize, QRunnable, Slot, Signal, QObject, QThreadPool
 
-current_path = spotiripper_helper.get_current_path()
+current_path = helper.get_current_path()
 
 
 def main():
@@ -102,19 +102,19 @@ def main():
             super(Highlighter, self).__init__(parent)
             self.trackFormat = QTextCharFormat()
             self.trackFormat.setForeground(Qt.white)
-            self.trackFormat.setBackground(QColor(spotiripper_helper.MACOSGREEN[0], spotiripper_helper.MACOSGREEN[1],
-                                                  spotiripper_helper.MACOSGREEN[2]))
+            self.trackFormat.setBackground(QColor(helper.MACOSGREEN[0], helper.MACOSGREEN[1],
+                                                  helper.MACOSGREEN[2]))
 
             self.warningFormat = QTextCharFormat()
             self.warningFormat.setForeground(Qt.black)
             self.warningFormat.setBackground(
-                QColor(spotiripper_helper.MACOSYELLOW[0], spotiripper_helper.MACOSYELLOW[1],
-                       spotiripper_helper.MACOSYELLOW[2]))
+                QColor(helper.MACOSYELLOW[0], helper.MACOSYELLOW[1],
+                       helper.MACOSYELLOW[2]))
 
             self.errorFormat = QTextCharFormat()
             self.errorFormat.setForeground(Qt.white)
             self.errorFormat.setBackground(
-                QColor(spotiripper_helper.MACOSRED[0], spotiripper_helper.MACOSRED[1], spotiripper_helper.MACOSRED[2]))
+                QColor(helper.MACOSRED[0], helper.MACOSRED[1], helper.MACOSRED[2]))
 
         def highlightBlock(self, text):
             if text.startswith('Track'):
@@ -144,7 +144,7 @@ def main():
 
             self.setFixedSize(QSize(window_w, window_h))
             self.setWindowTitle("Spotiripper" + " " + VERSION)
-            app.setWindowIcon(QIcon(spotiripper_helper.resource_path('../spotiripper.png')))
+            app.setWindowIcon(QIcon(helper.resource_path('../icon.icns')))
 
             self.link_widget = QLineEdit(self)
             self.link_widget.setAlignment(Qt.AlignCenter)
@@ -179,7 +179,7 @@ def main():
             self.detail_widget.setText("")
             self.detail_widget.setGeometry(margin, 3 * margin + 2 * link_h, margin + link_w + button_w, detail_h)
             self.detail_widget.setStyleSheet(
-                "background-color: rgb{}; color: rgb(255,255,255);".format(str(spotiripper_helper.MACOSDARK)))
+                "background-color: rgb{}; color: rgb(255,255,255);".format(str(helper.MACOSDARK)))
 
             self.soundbar = QProgressBar(self)
             self.soundbar.setValue(0)
@@ -219,7 +219,7 @@ def main():
             self.volume.setText("{:4.2f}/{:4.2f}".format(x, self.max_volume))
 
         def execute_this_fn(self, progress_callback, soundbar_callback):
-            tracks, error = spotiripper_helper.parse_input(self.link_widget.text(), int(self.start_spinbox.value()) - 1)
+            tracks, error = helper.parse_input(self.link_widget.text(), int(self.start_spinbox.value()) - 1)
             if error is None:
                 progress_callback.emit("Ripping {} track{}.".format(len(tracks), "s" if len(tracks) > 1 else ""))
                 for track in tracks:
@@ -233,7 +233,7 @@ def main():
                                         gui_progress_callback=progress_callback,
                                         gui_soundbar_callback=soundbar_callback)
                         self.max_volume = 0.0
-                        ripper.rip(spotiripper_helper.convert_to_uri(track.rstrip()))
+                        ripper.rip(helper.convert_to_uri(track.rstrip()))
                     else:
                         progress_callback.emit(track)
 
